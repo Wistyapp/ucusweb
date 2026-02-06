@@ -1,0 +1,216 @@
+# ============================================
+# FLUTTER & DART
+# ============================================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+*.packages
+pubspec.lock
+build/
+coverage/
+
+# Generated files
+*.g.dart
+*.config.dart
+*.freezed.dart
+*.gql.dart
+*.graphql.dart
+*.pb.dart
+*.pbgrpc.dart
+*.pbenum.dart
+*.pbjson.dart
+
+# ============================================
+# IDE & EDITOR
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+*.iml
+*.iws
+*.ipr
+
+.DS_Store
+
+# ============================================
+# ANDROID
+# ============================================
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/android/gradle.properties
+**/android/local.properties
+**/android/.gradle/
+**/android/build/
+**/android/.idea/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/.android/
+
+# ============================================
+# iOS & macOS
+# ============================================
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Podfile.lock
+**/ios/Pods/
+**/ios/Runner.xcworkspace/
+**/macos/Flutter/Generated.xcconfig
+**/macos/Flutter/flutter_export_environment.sh
+**/macos/Podfile.lock
+**/macos/Pods/
+
+# ============================================
+# WEB
+# ============================================
+web/main.dart.js
+web/main.dart.js.map
+
+# ============================================
+# FIREBASE
+# ============================================
+.firebaserc
+firebase-debug.log
+firebase-functions-debug.log
+**/functions/lib/
+**/functions/.runtimeconfig.json
+
+# ============================================
+# ENVIRONMENT & SECRETS
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.prod
+.env.prod.local
+.env.dev
+.env.dev.local
+*.key
+*.jks
+*.keystore
+**/android/app/*.keystore
+**/android/app/*.jks
+
+# ============================================
+# CLOUD FUNCTIONS
+# ============================================
+functions/node_modules/
+functions/lib/
+functions/dist/
+functions/.env
+functions/.env.local
+functions/.firebaserc
+functions/firebase-debug.log
+functions/firebase-functions-debug.log
+
+# ============================================
+# PACKAGE MANAGERS
+# ============================================
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+
+# ============================================
+# OS & SYSTEM FILES
+# ============================================
+
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.bak
+
+
+
+
+# ============================================
+# DOCUMENTATION
+# ============================================
+.docusaurus/
+
+
+# ============================================
+# LOGS
+# ============================================
+logs/
+*.log
+
+
+
+
+# ============================================
+# TEMPORARY FILES
+# ============================================
+*.tmp
+*.temp
+*.cache
+.cache/
+tmp/
+temp/
+
+# ============================================
+# MISC
+# ============================================
+
+.vscode/settings.json
+.vscode/launch.json
+.run/
+
+
+# Miscellaneous
+*.class
+
+*.pyc
+
+
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+
+
+
+
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+
+
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
