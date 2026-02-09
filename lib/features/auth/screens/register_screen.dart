@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:email_validator/email_validator.dart';
-import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/app_auth_provider.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
@@ -50,7 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    final authProvider = context.read<AuthProvider>();
+    final authProvider = context.read<AppAuthProvider>();
     final success = await authProvider.signUp(
       email: _emailController.text.trim(),
       password: _passwordController.text,
@@ -312,7 +312,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 24),
 
                 // Error message
-                Consumer<AuthProvider>(
+                Consumer<AppAuthProvider>(
                   builder: (context, auth, _) {
                     if (auth.errorMessage != null) {
                       return Container(
@@ -352,7 +352,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
 
                 // Register button
-                Consumer<AuthProvider>(
+                Consumer<AppAuthProvider>(
                   builder: (context, auth, _) {
                     return SizedBox(
                       width: double.infinity,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/app_auth_provider.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/empty_state.dart';

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../../core/providers/auth_provider.dart';
-import '../../../core/providers/booking_provider.dart';
+import '../../../core/providers/app_auth_provider.dart';
+import '../../../core/providers/app_booking_provider.dart';
 import '../../../core/models/booking_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
@@ -32,9 +32,9 @@ class _CoachBookingsScreenState extends State<CoachBookingsScreen>
   }
 
   Future<void> _loadBookings() async {
-    final userId = context.read<AuthProvider>().userId;
+    final userId = context.read<AppAuthProvider>().userId;
     if (userId != null) {
-      context.read<BookingProvider>().loadCoachBookings(userId);
+      context.read<AppBookingProvider>().loadCoachBookings(userId);
     }
   }
 
@@ -52,7 +52,7 @@ class _CoachBookingsScreenState extends State<CoachBookingsScreen>
           ],
         ),
       ),
-      body: Consumer<BookingProvider>(
+      body: Consumer<AppBookingProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -479,7 +479,7 @@ class _CoachBookingsScreenState extends State<CoachBookingsScreen>
             onPressed: () async {
               Navigator.pop(context);
               final result =
-                  await context.read<BookingProvider>().cancelBooking(
+                  await context.read<AppBookingProvider>().cancelBooking(
                         bookingId: booking.id,
                         reason: 'Annulé par le coach',
                         cancelledBy: 'coach',

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/providers/auth_provider.dart';
-import '../../../core/providers/booking_provider.dart';
+import '../../../core/providers/app_auth_provider.dart';
+import '../../../core/providers/app_booking_provider.dart';
 import '../../../core/models/booking_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';

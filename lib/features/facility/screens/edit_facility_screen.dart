@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import '../../../core/providers/facility_provider.dart';
+import '../../../core/providers/app_facility_provider.dart';
 import '../../../core/models/facility_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/custom_button.dart';

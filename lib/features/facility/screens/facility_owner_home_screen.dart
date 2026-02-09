@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/providers/auth_provider.dart';
-import '../../../core/providers/facility_provider.dart';
-import '../../../core/providers/booking_provider.dart';
+import '../../../core/providers/app_auth_provider.dart';
+import '../../../core/providers/app_facility_provider.dart';
+import '../../../core/providers/app_booking_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 
@@ -446,7 +446,7 @@ class _DashboardTab extends StatelessWidget {
                 title: 'Nouveau message',
                 subtitle: 'Coach Pierre vous a écrit',
                 time: 'Hier',
-                color: AppTheme.primaryColor,
+                color: AppTheme.lightTheme.primaryColor,
               ),
               const Divider(height: 1),
               _ActivityItem(

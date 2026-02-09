@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/providers/auth_provider.dart';
-import '../../../core/providers/message_provider.dart';
+import '../../../core/providers/app_auth_provider.dart';
+import '../../../core/providers/app_message_provider.dart';
 import '../../../core/models/message_model.dart';
 import '../../../core/theme/app_theme.dart';
 

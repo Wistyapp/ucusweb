@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
+import 'address_model.dart';
+
 class FacilityModel extends Equatable {
   final String id;
   final String ownerId;
   final String name;
-  final Address address;
+  final AddressModel address;
   final String description;
   final List<String> images;
   final Map<String, bool> amenities;
@@ -59,7 +61,7 @@ class FacilityModel extends Equatable {
       id: doc.id,
       ownerId: data['ownerId'] ?? '',
       name: data['name'] ?? '',
-      address: Address.fromMap(data['address'] ?? {}),
+      address: AddressModel.fromMap(data['address'] ?? {}),
       description: data['description'] ?? '',
       images: List<String>.from(data['images'] ?? []),
       amenities: Map<String, bool>.from(data['amenities'] ?? {}),
@@ -111,7 +113,7 @@ class FacilityModel extends Equatable {
     String? id,
     String? ownerId,
     String? name,
-    Address? address,
+    AddressModel? address,
     String? description,
     List<String>? images,
     Map<String, bool>? amenities,
@@ -159,63 +161,7 @@ class FacilityModel extends Equatable {
   List<Object?> get props => [id, ownerId, name, isActive, rating];
 }
 
-class Address extends Equatable {
-  final String street;
-  final String city;
-  final String postalCode;
-  final String country;
-  final GeoPoint? geopoint;
 
-  const Address({
-    this.street = '',
-    this.city = '',
-    this.postalCode = '',
-    this.country = 'France',
-    this.geopoint,
-  });
-
-  String get formatted => '$street, $postalCode $city';
-  String get shortFormatted => '$city, $postalCode';
-
-  factory Address.fromMap(Map<String, dynamic> map) {
-    return Address(
-      street: map['street'] ?? '',
-      city: map['city'] ?? '',
-      postalCode: map['postalCode'] ?? '',
-      country: map['country'] ?? 'France',
-      geopoint: map['geopoint'] as GeoPoint?,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'street': street,
-      'city': city,
-      'postalCode': postalCode,
-      'country': country,
-      'geopoint': geopoint,
-    };
-  }
-
-  Address copyWith({
-    String? street,
-    String? city,
-    String? postalCode,
-    String? country,
-    GeoPoint? geopoint,
-  }) {
-    return Address(
-      street: street ?? this.street,
-      city: city ?? this.city,
-      postalCode: postalCode ?? this.postalCode,
-      country: country ?? this.country,
-      geopoint: geopoint ?? this.geopoint,
-    );
-  }
-
-  @override
-  List<Object?> get props => [street, city, postalCode, country, geopoint];
-}
 
 class PeakHours extends Equatable {
   final String startTime;

@@ -3,9 +3,9 @@ import '../models/user_model.dart';
 import '../models/coach_profile_model.dart';
 import '../services/firestore_service.dart';
 import '../services/storage_service.dart';
-import 'auth_provider.dart';
+import 'app_auth_provider.dart';
 
-class UserProvider extends ChangeNotifier {
+class AppUserProvider extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   final StorageService _storageService = StorageService();
 
@@ -22,7 +22,7 @@ class UserProvider extends ChangeNotifier {
   bool get isCoach => _currentUser?.type == 'coach';
   bool get isFacilityOwner => _currentUser?.type == 'facility';
 
-  void updateAuth(AuthProvider authProvider) {
+  void updateAuth(AppAuthProvider authProvider) {
     if (authProvider.isAuthenticated && authProvider.userId != null) {
       _loadCurrentUser(authProvider.userId!);
     } else {
@@ -81,7 +81,6 @@ class UserProvider extends ChangeNotifier {
         updates['phoneNumber'] = phoneNumber;
       }
 
-      // Upload profile image if provided
       if (profileImagePath != null) {
         final imageFile = await _storageService.pickImageFromGallery();
         if (imageFile != null) {

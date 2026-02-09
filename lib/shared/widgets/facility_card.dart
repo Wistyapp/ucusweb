@@ -5,7 +5,7 @@ import '../../core/theme/app_theme.dart';
 import 'rating_stars.dart';
 
 class FacilityCard extends StatelessWidget {
-  final Facility facility;
+  final FacilityModel facility;
   final VoidCallback? onTap;
   final bool showDistance;
   final double? distance;
@@ -271,7 +271,7 @@ class FacilityCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.primaryColor,
+                color: AppTheme.lightTheme.primaryColor,
               ),
             ),
             Text(
@@ -289,7 +289,7 @@ class FacilityCard extends StatelessWidget {
 }
 
 class FacilityCardSmall extends StatelessWidget {
-  final Facility facility;
+  final FacilityModel facility;
   final VoidCallback? onTap;
 
   const FacilityCardSmall({
@@ -348,7 +348,7 @@ class FacilityCardSmall extends StatelessWidget {
                         Text(
                           '${facility.hourlyRate.toStringAsFixed(0)}€/h',
                           style: TextStyle(
-                            color: AppTheme.primaryColor,
+                            color: AppTheme.lightTheme.primaryColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),

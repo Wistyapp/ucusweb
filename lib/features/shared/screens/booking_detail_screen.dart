@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import '../../../core/providers/booking_provider.dart';
-import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/app_booking_provider.dart';
+import '../../../core/providers/app_auth_provider.dart';
 import '../../../core/models/booking_model.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';

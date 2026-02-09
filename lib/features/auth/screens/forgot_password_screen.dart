@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:email_validator/email_validator.dart';
-import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/app_auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../widgets/auth_text_field.dart';
 
@@ -26,7 +26,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final authProvider = context.read<AuthProvider>();
+    final authProvider = context.read<AppAuthProvider>();
     final success = await authProvider.sendPasswordResetEmail(
       _emailController.text.trim(),
     );
@@ -116,7 +116,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 24),
 
           // Error message
-          Consumer<AuthProvider>(
+          Consumer<AppAuthProvider>(
             builder: (context, auth, _) {
               if (auth.errorMessage != null) {
                 return Container(
@@ -156,7 +156,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
 
           // Submit button
-          Consumer<AuthProvider>(
+          Consumer<AppAuthProvider>(
             builder: (context, auth, _) {
               return SizedBox(
                 width: double.infinity,

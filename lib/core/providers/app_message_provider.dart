@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/message_model.dart';
 import '../services/firestore_service.dart';
 
-class MessageProvider extends ChangeNotifier {
+class AppMessageProvider extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
 
   List<ConversationModel> _conversations = [];
@@ -27,7 +27,6 @@ class MessageProvider extends ChangeNotifier {
     });
   }
 
-  // Load conversations for user
   void loadConversations(String userId) {
     _conversationsSubscription?.cancel();
 
@@ -42,7 +41,6 @@ class MessageProvider extends ChangeNotifier {
     });
   }
 
-  // Load messages for conversation
   void loadMessages(String conversationId) {
     _messagesSubscription?.cancel();
 
@@ -57,22 +55,18 @@ class MessageProvider extends ChangeNotifier {
     });
   }
 
-  // Open conversation
   Future<void> openConversation(String conversationId, String currentUserId) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // Find conversation in list
       _currentConversation = _conversations.firstWhere(
             (c) => c.id == conversationId,
         orElse: () => _conversations.first,
       );
 
-      // Load messages
       loadMessages(conversationId);
 
-      // Mark as read
       await _firestoreService.markMessagesAsRead(conversationId, currentUserId);
 
       _isLoading = false;
@@ -84,7 +78,6 @@ class MessageProvider extends ChangeNotifier {
     }
   }
 
-  // Start or get conversation with another user
   Future<String?> startConversation({
     required String currentUserId,
     required String currentUserName,
@@ -130,14 +123,13 @@ class MessageProvider extends ChangeNotifier {
     }
   }
 
-  // Send message
   Future<bool> sendMessage({
     required String conversationId,
     required String senderId,
     required String senderName,
     String? senderProfileImage,
     required String text,
-    List<Attachment>? attachments,
+    List<AttachmentModel>? attachments,
   }) async {
     try {
       final message = MessageModel(
@@ -161,7 +153,6 @@ class MessageProvider extends ChangeNotifier {
     }
   }
 
-  // Mark messages as read
   Future<void> markAsRead(String conversationId, String userId) async {
     try {
       await _firestoreService.markMessagesAsRead(conversationId, userId);
@@ -171,7 +162,6 @@ class MessageProvider extends ChangeNotifier {
     }
   }
 
-  // Close current conversation
   void closeConversation() {
     _messagesSubscription?.cancel();
     _currentConversation = null;
@@ -179,7 +169,6 @@ class MessageProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Get unread count for specific user
   int getUnreadCountForUser(String conversationId, String userId) {
     final conversation = _conversations.firstWhere(
           (c) => c.id == conversationId,

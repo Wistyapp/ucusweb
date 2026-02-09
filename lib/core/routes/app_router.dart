@@ -16,7 +16,7 @@ import '../../features/coach/screens/booking_screen.dart';
 import '../../features/coach/screens/coach_bookings_screen.dart';
 
 // Facility Owner Screens
-import '../../features/facility/screens/facility_owner_home_screen.dart';
+import '../../features/facility/screens/facility_owner_home_screen.dart' hide MyFacilitiesScreen, ProfileScreen, ConversationsScreen;
 import '../../features/facility/screens/my_facilities_screen.dart';
 import '../../features/facility/screens/create_facility_screen.dart';
 import '../../features/facility/screens/edit_facility_screen.dart';

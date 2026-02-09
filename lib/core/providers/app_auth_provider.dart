@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../services/auth_service.dart';
 
 enum AuthStatus {
@@ -10,23 +10,23 @@ enum AuthStatus {
   error,
 }
 
-class AuthProvider extends ChangeNotifier {
+class AppAuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
 
   AuthStatus _status = AuthStatus.initial;
-  User? _user;
+  firebase_auth.User? _user;
   String? _userType;
   String? _errorMessage;
 
   AuthStatus get status => _status;
-  User? get user => _user;
+  firebase_auth.User? get user => _user;
   String? get userType => _userType;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
   bool get isLoading => _status == AuthStatus.loading;
   String? get userId => _user?.uid;
 
-  AuthProvider() {
+  AppAuthProvider() {
     _initAuth();
   }
 

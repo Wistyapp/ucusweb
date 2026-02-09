@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import '../../../core/providers/facility_provider.dart';
+import '../../../core/providers/app_facility_provider.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
@@ -25,12 +25,12 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<FacilityProvider>().loadFacility(widget.facilityId);
+    context.read<AppFacilityProvider>().loadFacility(widget.facilityId);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<FacilityProvider>(
+    return Consumer<AppFacilityProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading) {
           return const Scaffold(
@@ -622,7 +622,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   final spaces =
-                      context.read<FacilityProvider>().selectedFacilitySpaces;
+                      context.read<AppFacilityProvider>().selectedFacilitySpaces;
                   if (spaces.isNotEmpty) {
                     Navigator.pushNamed(
                       context,

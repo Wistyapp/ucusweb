@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/providers/auth_provider.dart';
-import '../../../core/providers/user_provider.dart';
-import '../../../core/providers/booking_provider.dart';
+import '../../../core/providers/app_auth_provider.dart';
+import '../../../core/providers/app_user_provider.dart';
+import '../../../core/providers/app_booking_provider.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
@@ -25,9 +25,9 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
   }
 
   Future<void> _loadData() async {
-    final userId = context.read<AuthProvider>().userId;
+    final userId = context.read<AppAuthProvider>().userId;
     if (userId != null) {
-      context.read<BookingProvider>().loadCoachBookings(userId);
+      context.read<AppBookingProvider>().loadCoachBookings(userId);
     }
   }
 
@@ -101,7 +101,7 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
   }
 
   Widget _buildHeader() {
-    return Consumer<UserProvider>(
+    return Consumer<AppUserProvider>(
       builder: (context, userProvider, _) {
         final user = userProvider.currentUser;
         final greeting = _getGreeting();
@@ -234,7 +234,7 @@ class _CoachHomeScreenState extends State<CoachHomeScreen> {
   }
 
   Widget _buildUpcomingBookings() {
-    return Consumer<BookingProvider>(
+    return Consumer<AppBookingProvider>(
       builder: (context, bookingProvider, _) {
         final upcomingBookings = bookingProvider.upcomingCoachBookings;
 

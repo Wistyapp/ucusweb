@@ -4,7 +4,7 @@ import '../services/firestore_service.dart';
 import '../services/booking_service.dart';
 import '../services/payment_service.dart';
 
-class BookingProvider extends ChangeNotifier {
+class AppBookingProvider extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   final BookingService _bookingService = BookingService();
   final PaymentService _paymentService = PaymentService();
@@ -23,7 +23,6 @@ class BookingProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Filtered lists
   List<BookingModel> get upcomingCoachBookings => _coachBookings
       .where((b) => b.isUpcoming)
       .toList();
@@ -40,7 +39,6 @@ class BookingProvider extends ChangeNotifier {
       .where((b) => b.isConfirmed)
       .toList();
 
-  // Load coach bookings
   Future<void> loadCoachBookings(String coachId) async {
     _isLoading = true;
     _error = null;
@@ -57,7 +55,6 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  // Load facility bookings (for facility owner)
   Future<void> loadFacilityBookings(String facilityId) async {
     _isLoading = true;
     _error = null;
@@ -74,7 +71,6 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  // Calculate price for booking
   void calculatePrice({
     required double hourlyRate,
     required DateTime startTime,
@@ -93,12 +89,10 @@ class BookingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Validate booking request
   BookingValidationResult validateBooking(BookingRequest request) {
     return _bookingService.validateBookingRequest(request);
   }
 
-  // Check slot availability
   Future<bool> checkAvailability({
     required String facilityId,
     required String spaceId,
@@ -119,7 +113,6 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  // Create booking
   Future<CreateBookingResult> createBooking({
     required String coachId,
     required String facilityId,
@@ -139,7 +132,6 @@ class BookingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Calculate price first
       if (_priceDetails == null) {
         _isLoading = false;
         _error = 'Veuillez calculer le prix avant de réserver.';
@@ -169,7 +161,6 @@ class BookingProvider extends ChangeNotifier {
       );
 
       if (result.success && result.bookingId != null) {
-        // Load the created booking
         _currentBooking = await _firestoreService.getBooking(result.bookingId!);
       } else {
         _error = result.error;
@@ -189,7 +180,6 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  // Process payment
   Future<PaymentResult> processPayment({
     required String bookingId,
     required double amount,
@@ -200,7 +190,6 @@ class BookingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Initialize payment sheet
       final initResult = await _paymentService.initializePaymentSheet(
         bookingId: bookingId,
         amount: amount,
@@ -215,14 +204,10 @@ class BookingProvider extends ChangeNotifier {
         return PaymentResult(success: false, error: initResult.error);
       }
 
-      // Present payment sheet
       final paymentResult = await _paymentService.presentPaymentSheet();
 
       if (paymentResult.success) {
-        // Confirm booking
         await _bookingService.confirmBooking(bookingId);
-
-        // Reload booking
         _currentBooking = await _firestoreService.getBooking(bookingId);
       } else {
         _error = paymentResult.error;
@@ -239,7 +224,6 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  // Cancel booking
   Future<CancelBookingResult> cancelBooking({
     required String bookingId,
     required String reason,
@@ -257,7 +241,6 @@ class BookingProvider extends ChangeNotifier {
       );
 
       if (result.success) {
-        // Update local lists
         _coachBookings = _coachBookings.map((b) {
           if (b.id == bookingId) {
             return b.copyWith(
@@ -306,7 +289,6 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  // Load single booking
   Future<void> loadBooking(String bookingId) async {
     _isLoading = true;
     _error = null;
@@ -323,7 +305,6 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  // Clear current booking
   void clearCurrentBooking() {
     _currentBooking = null;
     _priceDetails = null;

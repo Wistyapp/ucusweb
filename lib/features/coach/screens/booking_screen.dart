@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../../core/providers/auth_provider.dart';
-import '../../../core/providers/user_provider.dart';
-import '../../../core/providers/facility_provider.dart';
-import '../../../core/providers/booking_provider.dart';
+import '../../../core/providers/app_auth_provider.dart';
+import '../../../core/providers/app_user_provider.dart';
+import '../../../core/providers/app_facility_provider.dart';
+import '../../../core/providers/app_booking_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/booking_model.dart';
@@ -71,7 +71,7 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Réserver')),
-      body: Consumer<FacilityProvider>(
+      body: Consumer<AppFacilityProvider>(
         builder: (context, provider, _) {
           final facility = provider.selectedFacility;
           if (facility == null) return const Center(child: CircularProgressIndicator());

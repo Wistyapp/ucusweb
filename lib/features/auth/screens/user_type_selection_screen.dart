@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/providers/auth_provider.dart';
-import '../../../core/providers/user_provider.dart';
+import '../../../core/providers/app_auth_provider.dart';
+import '../../../core/providers/app_user_provider.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
@@ -26,8 +26,8 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
     });
 
     try {
-      final userProvider = context.read<UserProvider>();
-      final authProvider = context.read<AuthProvider>();
+      final userProvider = context.read<AppUserProvider>();
+      final authProvider = context.read<AppAuthProvider>();
 
       // Update user type in Firestore
       // This would typically be done through the user provider

@@ -143,7 +143,7 @@ class MessageModel extends Equatable {
   final String senderName;
   final String? senderProfileImage;
   final String text;
-  final List<Attachment> attachments;
+  final List<AttachmentModel> attachments;
   final bool isRead;
   final DateTime? readAt;
   final DateTime createdAt;
@@ -178,7 +178,7 @@ class MessageModel extends Equatable {
       senderProfileImage: data['senderProfileImage'],
       text: data['text'] ?? '',
       attachments: (data['attachments'] as List<dynamic>?)
-          ?.map((e) => Attachment.fromMap(e as Map<String, dynamic>))
+          ?.map((e) => AttachmentModel.fromMap(e as Map<String, dynamic>))
           .toList() ??
           [],
       isRead: data['isRead'] ?? false,
@@ -212,7 +212,7 @@ class MessageModel extends Equatable {
     String? senderName,
     String? senderProfileImage,
     String? text,
-    List<Attachment>? attachments,
+    List<AttachmentModel>? attachments,
     bool? isRead,
     DateTime? readAt,
     DateTime? createdAt,
@@ -239,14 +239,14 @@ class MessageModel extends Equatable {
   List<Object?> get props => [id, conversationId, senderId, text, createdAt];
 }
 
-class Attachment extends Equatable {
+class AttachmentModel extends Equatable {
   final String type; // 'image', 'file', 'document'
   final String url;
   final String storagePath;
   final String fileName;
   final int fileSize;
 
-  const Attachment({
+  const AttachmentModel({
     required this.type,
     required this.url,
     required this.storagePath,
@@ -264,8 +264,8 @@ class Attachment extends Equatable {
     return '${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
-  factory Attachment.fromMap(Map<String, dynamic> map) {
-    return Attachment(
+  factory AttachmentModel.fromMap(Map<String, dynamic> map) {
+    return AttachmentModel(
       type: map['type'] ?? 'file',
       url: map['url'] ?? '',
       storagePath: map['storagePath'] ?? '',

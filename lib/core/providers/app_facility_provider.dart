@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
+import '../models/address_model.dart';
 import '../models/facility_model.dart';
 import '../services/firestore_service.dart';
 import '../services/storage_service.dart';
 import 'package:image_picker/image_picker.dart';
 
-class FacilityProvider extends ChangeNotifier {
+class AppFacilityProvider extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   final StorageService _storageService = StorageService();
 
@@ -24,7 +25,6 @@ class FacilityProvider extends ChangeNotifier {
   bool get isSearching => _isSearching;
   String? get error => _error;
 
-  // Search facilities
   Future<void> searchFacilities({
     String? city,
     double? minRating,
@@ -51,7 +51,6 @@ class FacilityProvider extends ChangeNotifier {
     }
   }
 
-  // Load facility details
   Future<void> loadFacility(String facilityId) async {
     _isLoading = true;
     _error = null;
@@ -71,7 +70,6 @@ class FacilityProvider extends ChangeNotifier {
     }
   }
 
-  // Load my facilities (for facility owners)
   Future<void> loadMyFacilities(String ownerId) async {
     _isLoading = true;
     _error = null;
@@ -88,12 +86,11 @@ class FacilityProvider extends ChangeNotifier {
     }
   }
 
-  // Create facility
   Future<String?> createFacility({
     required String ownerId,
     required String name,
     required String description,
-    required Address address,
+    required AddressModel address,
     required Map<String, bool> amenities,
     required int capacity,
     required double hourlyRate,
@@ -106,10 +103,8 @@ class FacilityProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Upload images first
       List<String> imageUrls = [];
       if (images != null && images.isNotEmpty) {
-        // Create a temporary ID for storage
         final tempId = DateTime.now().millisecondsSinceEpoch.toString();
         final results = await _storageService.uploadFacilityImages(
           images: images,
@@ -139,7 +134,6 @@ class FacilityProvider extends ChangeNotifier {
 
       final facilityId = await _firestoreService.createFacility(facility);
 
-      // Refresh facilities list
       await loadMyFacilities(ownerId);
 
       _isLoading = false;
@@ -153,7 +147,6 @@ class FacilityProvider extends ChangeNotifier {
     }
   }
 
-  // Update facility
   Future<bool> updateFacility({
     required String facilityId,
     String? name,
@@ -181,8 +174,6 @@ class FacilityProvider extends ChangeNotifier {
 
       if (updates.isNotEmpty) {
         await _firestoreService.updateFacility(facilityId, updates);
-
-        // Reload facility
         await loadFacility(facilityId);
       }
 
@@ -197,7 +188,6 @@ class FacilityProvider extends ChangeNotifier {
     }
   }
 
-  // Add facility images
   Future<bool> addFacilityImages({
     required String facilityId,
     required List<XFile> images,
@@ -237,7 +227,6 @@ class FacilityProvider extends ChangeNotifier {
     }
   }
 
-  // Create space within facility
   Future<String?> createSpace({
     required String facilityId,
     required String name,
@@ -275,7 +264,6 @@ class FacilityProvider extends ChangeNotifier {
 
       final spaceId = await _firestoreService.createSpace(facilityId, space);
 
-      // Reload spaces
       _selectedFacilitySpaces = await _firestoreService.getSpaces(facilityId);
 
       _isLoading = false;
@@ -289,7 +277,6 @@ class FacilityProvider extends ChangeNotifier {
     }
   }
 
-  // Delete facility
   Future<bool> deleteFacility(String facilityId) async {
     _isLoading = true;
     _error = null;
@@ -315,13 +302,11 @@ class FacilityProvider extends ChangeNotifier {
     }
   }
 
-  // Clear search results
   void clearSearchResults() {
     _searchResults = [];
     notifyListeners();
   }
 
-  // Clear selected facility
   void clearSelectedFacility() {
     _selectedFacility = null;
     _selectedFacilitySpaces = [];
