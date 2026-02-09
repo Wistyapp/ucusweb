@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/providers/app_booking_provider.dart';
 import '../../../core/providers/app_auth_provider.dart';
 import '../../../core/models/booking_model.dart';
@@ -21,7 +22,7 @@ class BookingDetailScreen extends StatefulWidget {
 }
 
 class _BookingDetailScreenState extends State<BookingDetailScreen> {
-  Booking? _booking;
+  BookingModel? _booking;
   bool _isLoading = true;
   String? _error;
 
@@ -34,7 +35,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   Future<void> _loadBooking() async {
     try {
       setState(() => _isLoading = true);
-      final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+      final bookingProvider = Provider.of<AppBookingProvider>(context, listen: false);
       final booking = await bookingProvider.getBookingById(widget.bookingId);
       setState(() {
         _booking = booking;
@@ -125,14 +126,14 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      color: color.withOpacity(0.1),
+      color: color?.withValues(alpha: 0.1),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: color, size: 28),
           const SizedBox(width: 12),
           Text(
-            label,
+            label?? '',
             style: TextStyle(
               color: color,
               fontSize: 18,
@@ -174,7 +175,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _booking!.facilityName,
+                  _booking?.facilityName ?? 'Nom de l\'établissement non disponible',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -188,20 +189,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   ),
                 ],
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        _booking!.facilityAddress ?? 'Adresse non disponible',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
+
               ],
             ),
           ),
@@ -299,7 +287,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
-                  color: AppTheme.primaryColor,
+                  color: AppTheme.lightTheme.primaryColor,
                 ),
               ),
             ],
@@ -308,7 +296,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: _getPaymentStatusColor(_booking!.paymentStatus).withOpacity(0.1),
+              color: _getPaymentStatusColor(_booking!.paymentStatus)?.withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -321,7 +309,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _getPaymentStatusLabel(_booking!.paymentStatus),
+                  _getPaymentStatusLabel(_booking!.paymentStatus ) ?? 'non disponible',
                   style: TextStyle(
                     color: _getPaymentStatusColor(_booking!.paymentStatus),
                     fontWeight: FontWeight.w600,
@@ -336,7 +324,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   }
 
   Widget _buildActions() {
-    final authProvider = Provider.of<AuthProvider>(context);
+    final authProvider = Provider.of<AppAuthProvider>(context);
     final isCoach = authProvider.userType == 'coach';
 
     return Padding(
@@ -478,13 +466,13 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
   Future<void> _cancelBooking(String reason) async {
     try {
-      final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final bookingProvider = Provider.of<AppBookingProvider>(context, listen: false);
+      final authProvider = Provider.of<AppAuthProvider>(context, listen: false);
       
       await bookingProvider.cancelBooking(
-        _booking!.id,
-        reason,
-        authProvider.userType ?? 'coach',
+        bookingId: _booking!.id,
+        reason: reason,
+        cancelledBy: authProvider.userType ?? 'coach',
       );
 
       if (mounted) {
@@ -502,7 +490,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     }
   }
 
-  Color _getStatusColor(BookingStatus status) {
+  Color? _getStatusColor(String status) {
     switch (status) {
       case BookingStatus.pending:
         return Colors.orange;
@@ -514,10 +502,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         return Colors.green;
       case BookingStatus.cancelled:
         return Colors.red;
+      default:
+        return null;
     }
   }
 
-  IconData _getStatusIcon(BookingStatus status) {
+  IconData? _getStatusIcon(String status) {
     switch (status) {
       case BookingStatus.pending:
         return Icons.hourglass_empty;
@@ -529,10 +519,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         return Icons.verified;
       case BookingStatus.cancelled:
         return Icons.cancel;
+      default:
+        return null;
     }
   }
 
-  String _getStatusLabel(BookingStatus status) {
+  String? _getStatusLabel(String status) {
     switch (status) {
       case BookingStatus.pending:
         return 'En attente de confirmation';
@@ -544,45 +536,53 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         return 'Terminée';
       case BookingStatus.cancelled:
         return 'Annulée';
+      default:
+        return null;
     }
   }
 
-  Color _getPaymentStatusColor(PaymentStatus status) {
+  Color? _getPaymentStatusColor(String status) {
     switch (status) {
       case PaymentStatus.pending:
         return Colors.orange;
-      case PaymentStatus.succeeded:
+      case PaymentStatus.completed:
         return Colors.green;
       case PaymentStatus.failed:
         return Colors.red;
       case PaymentStatus.refunded:
         return Colors.blue;
+        default:
+        return null;
     }
   }
 
-  IconData _getPaymentStatusIcon(PaymentStatus status) {
+  IconData? _getPaymentStatusIcon(String status) {
     switch (status) {
       case PaymentStatus.pending:
         return Icons.pending;
-      case PaymentStatus.succeeded:
+      case PaymentStatus.completed:
         return Icons.check_circle;
       case PaymentStatus.failed:
         return Icons.error;
       case PaymentStatus.refunded:
         return Icons.replay;
+      default:
+        return null;
     }
   }
 
-  String _getPaymentStatusLabel(PaymentStatus status) {
+  String? _getPaymentStatusLabel(String status) {
     switch (status) {
       case PaymentStatus.pending:
         return 'Paiement en attente';
-      case PaymentStatus.succeeded:
+      case PaymentStatus.completed:
         return 'Paiement effectué';
       case PaymentStatus.failed:
         return 'Paiement échoué';
       case PaymentStatus.refunded:
         return 'Remboursé';
+      default:
+        return null;
     }
   }
 }

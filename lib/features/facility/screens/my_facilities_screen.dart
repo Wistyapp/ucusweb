@@ -53,7 +53,7 @@ class _MyFacilitiesScreenState extends State<MyFacilitiesScreen> {
           }
 
           if (facilityProvider.ownerFacilities.isEmpty) {
-            return EmptyState(
+            return EmptyStateWidget(
               icon: Icons.business_outlined,
               title: 'Aucune salle',
               message: 'Vous n\'avez pas encore ajouté de salle.\nCommencez dès maintenant !',

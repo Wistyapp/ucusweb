@@ -110,7 +110,7 @@ class _CreateReviewScreenState extends State<CreateReviewScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final authProvider = context.read<AuthProvider>();
+      final authProvider = context.read<AppAuthProvider>();
       
       // Create review data
       final reviewData = {
@@ -224,7 +224,7 @@ class _CreateReviewScreenState extends State<CreateReviewScreen> {
               Text(
                 _getRatingLabel(_overallRating.toInt()),
                 style: TextStyle(
-                  color: AppTheme.primaryColor,
+                  color: AppTheme.lightTheme.primaryColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),

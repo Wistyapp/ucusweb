@@ -1,66 +1,77 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 
-enum ButtonType { primary, secondary, outline, text, danger }
+enum ButtonVariant {
+  primary,
+  secondary,
+  outlined,
+  text,
+  danger,
+}
+
+enum ButtonSize {
+  small,
+  medium,
+  large,
+}
 
 class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
-  final ButtonType type;
-  final bool isLoading;
-  final bool isExpanded;
+  final ButtonVariant variant;
+  final ButtonSize size;
   final IconData? icon;
-  final double? width;
-  final double height;
-  final double borderRadius;
+  final bool isLoading;
+  final bool isFullWidth;
+  final Color? customColor;
 
   const CustomButton({
     super.key,
     required this.text,
     this.onPressed,
-    this.type = ButtonType.primary,
-    this.isLoading = false,
-    this.isExpanded = false,
+    this.variant = ButtonVariant.primary,
+    this.size = ButtonSize.medium,
     this.icon,
-    this.width,
-    this.height = 48,
-    this.borderRadius = 12,
+    this.isLoading = false,
+    this.isFullWidth = true,
+    this.customColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: isExpanded ? double.infinity : width,
-      height: height,
+      width: isFullWidth ? double.infinity : null,
+      height: _getHeight(),
       child: _buildButton(context),
     );
   }
 
   Widget _buildButton(BuildContext context) {
-    switch (type) {
-      case ButtonType.primary:
-        return _buildPrimaryButton(context);
-      case ButtonType.secondary:
+    switch (variant) {
+      case ButtonVariant.primary:
+        return _buildElevatedButton(context);
+      case ButtonVariant.secondary:
         return _buildSecondaryButton(context);
-      case ButtonType.outline:
-        return _buildOutlineButton(context);
-      case ButtonType.text:
+      case ButtonVariant.outlined:
+        return _buildOutlinedButton(context);
+      case ButtonVariant.text:
         return _buildTextButton(context);
-      case ButtonType.danger:
+      case ButtonVariant.danger:
         return _buildDangerButton(context);
     }
   }
 
-  Widget _buildPrimaryButton(BuildContext context) {
+  Widget _buildElevatedButton(BuildContext context) {
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.lightTheme.primaryColor,
+        backgroundColor: customColor ?? AppColors.primary,
         foregroundColor: Colors.white,
+        padding: _getPadding(),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
+          borderRadius: BorderRadius.circular(12),
         ),
-        elevation: 2,
+        elevation: 0,
       ),
       child: _buildContent(Colors.white),
     );
@@ -70,28 +81,33 @@ class CustomButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.lightTheme.secondaryHeaderColor,
-        foregroundColor: Colors.white,
+        backgroundColor: (customColor ?? AppColors.primary).withOpacity(0.1),
+        foregroundColor: customColor ?? AppColors.primary,
+        padding: _getPadding(),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
+          borderRadius: BorderRadius.circular(12),
         ),
-        elevation: 2,
+        elevation: 0,
       ),
-      child: _buildContent(Colors.white),
+      child: _buildContent(customColor ?? AppColors.primary),
     );
   }
 
-  Widget _buildOutlineButton(BuildContext context) {
+  Widget _buildOutlinedButton(BuildContext context) {
     return OutlinedButton(
       onPressed: isLoading ? null : onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppTheme.lightTheme.primaryColor,
-        side: BorderSide(color: AppTheme.lightTheme.primaryColor, width: 1.5),
+        foregroundColor: customColor ?? AppColors.primary,
+        padding: _getPadding(),
+        side: BorderSide(
+          color: customColor ?? AppColors.primary,
+          width: 1.5,
+        ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
-      child: _buildContent(AppTheme.lightTheme.primaryColor),
+      child: _buildContent(customColor ?? AppColors.primary),
     );
   }
 
@@ -99,12 +115,13 @@ class CustomButton extends StatelessWidget {
     return TextButton(
       onPressed: isLoading ? null : onPressed,
       style: TextButton.styleFrom(
-        foregroundColor: AppTheme.lightTheme.primaryColor,
+        foregroundColor: customColor ?? AppColors.primary,
+        padding: _getPadding(),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
-      child: _buildContent(AppTheme.lightTheme.primaryColor),
+      child: _buildContent(customColor ?? AppColors.primary),
     );
   }
 
@@ -112,12 +129,13 @@ class CustomButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.error,
         foregroundColor: Colors.white,
+        padding: _getPadding(),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
+          borderRadius: BorderRadius.circular(12),
         ),
-        elevation: 2,
+        elevation: 0,
       ),
       child: _buildContent(Colors.white),
     );
@@ -130,7 +148,7 @@ class CustomButton extends StatelessWidget {
         height: 20,
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation(color),
+          valueColor: AlwaysStoppedAnimation<Color>(color),
         ),
       );
     }
@@ -140,13 +158,13 @@ class CustomButton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 20),
+          Icon(icon, size: _getIconSize()),
           const SizedBox(width: 8),
           Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
+              fontSize: _getFontSize(),
               fontWeight: FontWeight.w600,
-              fontSize: 16,
             ),
           ),
         ],
@@ -155,10 +173,103 @@ class CustomButton extends StatelessWidget {
 
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
+        fontSize: _getFontSize(),
         fontWeight: FontWeight.w600,
-        fontSize: 16,
       ),
     );
+  }
+
+  double _getHeight() {
+    switch (size) {
+      case ButtonSize.small:
+        return 40;
+      case ButtonSize.medium:
+        return 50;
+      case ButtonSize.large:
+        return 56;
+    }
+  }
+
+  EdgeInsets _getPadding() {
+    switch (size) {
+      case ButtonSize.small:
+        return const EdgeInsets.symmetric(horizontal: 16, vertical: 8);
+      case ButtonSize.medium:
+        return const EdgeInsets.symmetric(horizontal: 24, vertical: 12);
+      case ButtonSize.large:
+        return const EdgeInsets.symmetric(horizontal: 32, vertical: 16);
+    }
+  }
+
+  double _getFontSize() {
+    switch (size) {
+      case ButtonSize.small:
+        return 13;
+      case ButtonSize.medium:
+        return 15;
+      case ButtonSize.large:
+        return 17;
+    }
+  }
+
+  double _getIconSize() {
+    switch (size) {
+      case ButtonSize.small:
+        return 16;
+      case ButtonSize.medium:
+        return 20;
+      case ButtonSize.large:
+        return 24;
+    }
+  }
+}
+
+/// Bouton icône circulaire
+class CircleIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final Color? backgroundColor;
+  final Color? iconColor;
+  final double size;
+  final String? tooltip;
+
+  const CircleIconButton({
+    super.key,
+    required this.icon,
+    this.onPressed,
+    this.backgroundColor,
+    this.iconColor,
+    this.size = 48,
+    this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final button = GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: backgroundColor ?? AppColors.surfaceVariant,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: iconColor ?? AppColors.textSecondary,
+          size: size * 0.5,
+        ),
+      ),
+    );
+
+    if (tooltip != null) {
+      return Tooltip(
+        message: tooltip!,
+        child: button,
+      );
+    }
+
+    return button;
   }
 }

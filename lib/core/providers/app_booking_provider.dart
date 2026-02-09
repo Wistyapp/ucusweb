@@ -39,6 +39,28 @@ class AppBookingProvider extends ChangeNotifier {
       .where((b) => b.isConfirmed)
       .toList();
 
+  /// Récupère une réservation par son ID
+  Future<BookingModel?> getBookingById(String bookingId) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final booking = await _firestoreService.getBooking(bookingId);
+      _currentBooking = booking;
+
+      _isLoading = false;
+      notifyListeners();
+
+      return booking;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+
   Future<void> loadCoachBookings(String coachId) async {
     _isLoading = true;
     _error = null;

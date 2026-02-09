@@ -8,6 +8,8 @@ class BookingModel extends Equatable {
   final String facilityId;
   final String spaceId;
   final String facilityOwnerId;
+
+  final String conversationId;
   final DateTime startTime;
   final DateTime endTime;
   final double durationHours;
@@ -47,6 +49,7 @@ class BookingModel extends Equatable {
     required this.facilityId,
     required this.spaceId,
     required this.facilityOwnerId,
+    required this.conversationId,
     required this.startTime,
     required this.endTime,
     required this.durationHours,
@@ -135,6 +138,7 @@ class BookingModel extends Equatable {
       facilityId: data['facilityId'] ?? '',
       spaceId: data['spaceId'] ?? '',
       facilityOwnerId: data['facilityOwnerId'] ?? '',
+      conversationId: data['conversationId'] ?? '',
       startTime: (data['startTime'] as Timestamp).toDate(),
       endTime: (data['endTime'] as Timestamp).toDate(),
       durationHours: (data['durationHours'] ?? 0).toDouble(),
@@ -174,6 +178,7 @@ class BookingModel extends Equatable {
       'facilityId': facilityId,
       'spaceId': spaceId,
       'facilityOwnerId': facilityOwnerId,
+      'conversationId': conversationId,
       'startTime': Timestamp.fromDate(startTime),
       'endTime': Timestamp.fromDate(endTime),
       'durationHours': durationHours,
@@ -217,6 +222,7 @@ class BookingModel extends Equatable {
     String? facilityId,
     String? spaceId,
     String? facilityOwnerId,
+    String? conversationId,
     DateTime? startTime,
     DateTime? endTime,
     double? durationHours,
@@ -254,6 +260,7 @@ class BookingModel extends Equatable {
       facilityId: facilityId ?? this.facilityId,
       spaceId: spaceId ?? this.spaceId,
       facilityOwnerId: facilityOwnerId ?? this.facilityOwnerId,
+      conversationId: conversationId ?? this.conversationId,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       durationHours: durationHours ?? this.durationHours,

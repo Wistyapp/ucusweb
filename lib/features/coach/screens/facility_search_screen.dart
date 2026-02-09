@@ -4,8 +4,10 @@ import '../../../core/providers/app_facility_provider.dart';
 import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
-import '../widgets/facility_card.dart';
+import '../../../shared/widgets/facility_card.dart';
 import '../widgets/search_filters_sheet.dart';
+
+
 
 class FacilitySearchScreen extends StatefulWidget {
   const FacilitySearchScreen({super.key});
@@ -124,7 +126,7 @@ class _FacilitySearchScreenState extends State<FacilitySearchScreen> {
 
           // Results
           Expanded(
-            child: Consumer<FacilityProvider>(
+            child: Consumer<AppFacilityProvider>(
               builder: (context, provider, _) {
                 if (provider.isSearching) {
                   return const Center(child: CircularProgressIndicator());
@@ -212,7 +214,7 @@ class _FacilitySearchScreenState extends State<FacilitySearchScreen> {
         label: Text(label),
         deleteIcon: const Icon(Icons.close, size: 18),
         onDeleted: onRemove,
-        backgroundColor: AppColors.primary.withOpacity(0.1),
+        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
         labelStyle: const TextStyle(
           color: AppColors.primary,
           fontWeight: FontWeight.w500,
@@ -222,7 +224,7 @@ class _FacilitySearchScreenState extends State<FacilitySearchScreen> {
     );
   }
 
-  Widget _buildResults(FacilityProvider provider) {
+  Widget _buildResults(AppFacilityProvider provider) {
     return RefreshIndicator(
       onRefresh: _performSearch,
       child: ListView.builder(

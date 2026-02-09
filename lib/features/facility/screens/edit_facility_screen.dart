@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:uncoachunesalle/core/models/address_model.dart';
 
 import '../../../core/providers/app_facility_provider.dart';
 import '../../../core/models/facility_model.dart';
@@ -34,7 +35,7 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
   late TextEditingController _websiteController;
   
   // State
-  Facility? _facility;
+  FacilityModel? _facility;
   bool _isLoading = true;
   bool _isSaving = false;
   List<String> _images = [];
@@ -78,7 +79,7 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
 
   Future<void> _loadFacility() async {
     try {
-      final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
+      final facilityProvider = Provider.of<AppFacilityProvider>(context, listen: false);
       final facility = await facilityProvider.getFacilityById(widget.facilityId);
       
       if (facility != null) {
@@ -457,7 +458,7 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
               }
             });
           },
-          selectedColor: AppTheme.primaryColor,
+          selectedColor: AppTheme.lightTheme.primaryColor,
           checkmarkColor: Colors.white,
           labelStyle: TextStyle(
             color: isSelected ? Colors.white : Colors.black87,
@@ -537,26 +538,26 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
     setState(() => _isSaving = true);
 
     try {
-      final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
+      final facilityProvider = Provider.of<AppFacilityProvider>(context, listen: false);
       
       final updatedFacility = _facility!.copyWith(
         name: _nameController.text,
         description: _descriptionController.text,
-        address: Address(
+        address: AddressModel(
           street: _streetController.text,
           city: _cityController.text,
           postalCode: _postalCodeController.text,
           country: 'France',
-          latitude: _facility!.address.latitude,
-          longitude: _facility!.address.longitude,
+          //latitude: _facility!.address.latitude,
+          //longitude: _facility!.address.longitude,
         ),
         hourlyRate: double.parse(_hourlyRateController.text),
         peakHourRate: double.tryParse(_peakHourRateController.text) ?? double.parse(_hourlyRateController.text),
         capacity: int.parse(_capacityController.text),
         images: _images,
         amenities: _selectedAmenities,
-        equipmentList: _equipmentList,
-        websiteUrl: _websiteController.text.isNotEmpty ? _websiteController.text : null,
+        //equipmentList: _equipmentList,
+        //websiteUrl: _websiteController.text.isNotEmpty ? _websiteController.text : null,
         updatedAt: DateTime.now(),
       );
 

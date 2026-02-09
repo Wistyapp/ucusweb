@@ -26,7 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-      body: Consumer<AuthProvider>(
+      body: Consumer<AppAuthProvider>(
         builder: (context, authProvider, child) {
           final user = authProvider.user;
 
@@ -41,8 +41,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 16),
                 _buildStatsSection(context),
                 const SizedBox(height: 16),
-                _buildMenuSection(context, user.type),
-                const SizedBox(height: 16),
                 _buildSupportSection(context),
                 const SizedBox(height: 16),
                 _buildLogoutButton(context, authProvider),
@@ -55,7 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context, dynamic user, AuthProvider authProvider) {
+  Widget _buildProfileHeader(BuildContext context, dynamic user, AppAuthProvider authProvider) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -64,8 +62,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryColor,
-            AppTheme.primaryColor.withOpacity(0.8),
+            AppTheme.lightTheme.primaryColor,
+            AppTheme.lightTheme.primaryColor.withValues(alpha: 0.8),
           ],
         ),
       ),
@@ -87,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
+                          color: AppTheme.lightTheme.primaryColor,
                         ),
                       )
                     : null,
@@ -106,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Icon(
                       Icons.camera_alt,
                       size: 20,
-                      color: AppTheme.primaryColor,
+                      color: AppTheme.lightTheme.primaryColor,
                     ),
                   ),
                 ),
@@ -311,7 +309,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildLogoutButton(BuildContext context, AuthProvider authProvider) {
+  Widget _buildLogoutButton(BuildContext context, AppAuthProvider authProvider) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: SizedBox(
@@ -332,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Future<void> _pickProfileImage(AuthProvider authProvider) async {
+  Future<void> _pickProfileImage(AppAuthProvider authProvider) async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     
@@ -351,7 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {
+  void _showLogoutDialog(BuildContext context, AppAuthProvider authProvider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -443,7 +441,7 @@ class _MenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: AppTheme.primaryColor),
+      leading: Icon(icon, color: AppTheme.lightTheme.primaryColor),
       title: Text(title),
       subtitle: subtitle != null ? Text(subtitle!, style: const TextStyle(fontSize: 12)) : null,
       trailing: const Icon(Icons.chevron_right),

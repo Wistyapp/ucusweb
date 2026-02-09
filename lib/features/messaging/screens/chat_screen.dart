@@ -47,11 +47,11 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _isLoading = true);
     
     try {
-      final messageProvider = context.read<MessageProvider>();
-      await messageProvider.loadMessages(widget.conversationId);
+      final messageProvider = context.read<AppMessageProvider>();
+      messageProvider.loadMessages(widget.conversationId);
       
       // Mark messages as read
-      final authProvider = context.read<AuthProvider>();
+      final authProvider = context.read<AppAuthProvider>();
       if (authProvider.user != null) {
         await messageProvider.markAsRead(
           widget.conversationId,
@@ -86,8 +86,8 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _isSending = true);
     
     try {
-      final authProvider = context.read<AuthProvider>();
-      final messageProvider = context.read<MessageProvider>();
+      final authProvider = context.read<AppAuthProvider>();
+      final messageProvider = context.read<AppMessageProvider>();
       
       await messageProvider.sendMessage(
         conversationId: widget.conversationId,
@@ -112,7 +112,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _pickAndSendImage() async {
+  /*Future<void> _pickAndSendImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     
@@ -121,8 +121,8 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _isSending = true);
     
     try {
-      final authProvider = context.read<AuthProvider>();
-      final messageProvider = context.read<MessageProvider>();
+      final authProvider = context.read<AppAuthProvider>();
+      final messageProvider = context.read<AppMessageProvider>();
       
       await messageProvider.sendImageMessage(
         conversationId: widget.conversationId,
@@ -144,7 +144,7 @@ class _ChatScreenState extends State<ChatScreen> {
     } finally {
       setState(() => _isSending = false);
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -155,13 +155,13 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+              backgroundColor: AppTheme.lightTheme.primaryColor.withValues(alpha: 0.1),
               child: Text(
                 widget.otherUserName.isNotEmpty 
                     ? widget.otherUserName[0].toUpperCase()
                     : 'U',
                 style: TextStyle(
-                  color: AppTheme.primaryColor,
+                  color: AppTheme.lightTheme.primaryColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -200,7 +200,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : Consumer<MessageProvider>(
+                : Consumer<AppMessageProvider>(
                     builder: (context, provider, child) {
                       final messages = provider.currentMessages;
                       
@@ -238,7 +238,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
                           final message = messages[index];
-                          final authProvider = context.read<AuthProvider>();
+                          final authProvider = context.read<AppAuthProvider>();
                           final isMe = message.senderId == authProvider.user?.uid;
                           
                           // Show date header if needed
@@ -319,7 +319,7 @@ class _ChatScreenState extends State<ChatScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha:0.1),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -330,7 +330,7 @@ class _ChatScreenState extends State<ChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             IconButton(
-              onPressed: _pickAndSendImage,
+              onPressed: (){},
               icon: Icon(
                 Icons.image,
                 color: Colors.grey[600],
@@ -363,7 +363,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             const SizedBox(width: 8),
             CircleAvatar(
-              backgroundColor: AppTheme.primaryColor,
+              backgroundColor: AppTheme.lightTheme.primaryColor,
               child: IconButton(
                 onPressed: _isSending ? null : _sendMessage,
                 icon: _isSending
@@ -386,7 +386,7 @@ class _ChatScreenState extends State<ChatScreen> {
 }
 
 class _MessageBubble extends StatelessWidget {
-  final Message message;
+  final MessageModel message;
   final bool isMe;
 
   const _MessageBubble({
@@ -422,7 +422,7 @@ class _MessageBubble extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isMe ? AppTheme.primaryColor : Colors.grey[200],
+                color: isMe ? AppTheme.lightTheme.primaryColor : Colors.grey[200],
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),

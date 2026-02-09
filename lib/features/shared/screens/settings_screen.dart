@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+
 
 import '../../../core/providers/app_auth_provider.dart';
 import '../../../core/routes/app_router.dart';
@@ -77,7 +78,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: const Text('Recevoir des notifications sur l\'appareil'),
             value: _notificationsEnabled,
             onChanged: (value) => setState(() => _notificationsEnabled = value),
-            activeColor: AppTheme.primaryColor,
+            activeThumbColor: AppTheme.lightTheme.primaryColor,
           ),
           SwitchListTile(
             secondary: const Icon(Icons.email_outlined),
@@ -85,7 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: const Text('Recevoir des emails de rappel'),
             value: _emailNotifications,
             onChanged: (value) => setState(() => _emailNotifications = value),
-            activeColor: AppTheme.primaryColor,
+            activeThumbColor: AppTheme.lightTheme.primaryColor,
           ),
           _buildListTile(
             icon: Icons.tune,
@@ -109,7 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SnackBar(content: Text('Fonctionnalité à venir')),
               );
             },
-            activeColor: AppTheme.primaryColor,
+            activeThumbColor: AppTheme.lightTheme.primaryColor,
           ),
           _buildListTile(
             icon: Icons.language,
@@ -255,7 +256,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      leading: Icon(icon, color: iconColor ?? AppTheme.primaryColor),
+      leading: Icon(icon, color: iconColor ?? AppTheme.lightTheme.primaryColor),
       title: Text(title, style: TextStyle(color: textColor)),
       subtitle: subtitle != null ? Text(subtitle) : null,
       trailing: const Icon(Icons.chevron_right),
@@ -329,7 +330,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showVerificationInfo() {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = Provider.of<AppAuthProvider>(context, listen: false);
     
     showModalBottomSheet(
       context: context,
@@ -565,7 +566,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              final authProvider = Provider.of<AppAuthProvider>(context, listen: false);
               await authProvider.signOut();
               if (context.mounted) {
                 Navigator.pushNamedAndRemoveUntil(

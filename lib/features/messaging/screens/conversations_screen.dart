@@ -20,11 +20,11 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   }
 
   Future<void> _loadConversations() async {
-    final authProvider = context.read<AuthProvider>();
-    final messageProvider = context.read<MessageProvider>();
+    final authProvider = context.read<AppAuthProvider>();
+    final messageProvider = context.read<AppMessageProvider>();
     
     if (authProvider.user != null) {
-      await messageProvider.loadConversations(authProvider.user!.uid);
+      messageProvider.loadConversations(authProvider.user!.uid);
     }
   }
 
@@ -35,7 +35,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
         title: const Text('Messages'),
         automaticallyImplyLeading: false,
       ),
-      body: Consumer<MessageProvider>(
+      body: Consumer<AppMessageProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -86,13 +86,13 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
 }
 
 class _ConversationTile extends StatelessWidget {
-  final Conversation conversation;
+  final ConversationModel conversation;
 
   const _ConversationTile({required this.conversation});
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.read<AuthProvider>();
+    final authProvider = context.read<AppAuthProvider>();
     final currentUserId = authProvider.user?.uid ?? '';
     final unreadCount = conversation.unreadCount[currentUserId] ?? 0;
     final hasUnread = unreadCount > 0;
@@ -112,14 +112,14 @@ class _ConversationTile extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 28,
-            backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-            backgroundImage: conversation.lastMessageSenderId != null
-                ? null // Would load profile image
-                : null,
+            backgroundColor: AppTheme.lightTheme.primaryColor.withValues(alpha:0.1),
+            backgroundImage: conversation.lastMessageSenderId == currentUserId
+                ? null
+                : const AssetImage('assets/images/avatar.png') as ImageProvider,
             child: Text(
               'C', // Would show initials
               style: TextStyle(
-                color: AppTheme.primaryColor,
+                color: AppTheme.lightTheme.primaryColor,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
@@ -170,7 +170,7 @@ class _ConversationTile extends StatelessWidget {
             _formatTime(conversation.lastMessageTime),
             style: TextStyle(
               fontSize: 12,
-              color: hasUnread ? AppTheme.primaryColor : Colors.grey[500],
+              color: hasUnread ? AppTheme.lightTheme.primaryColor : Colors.grey[500],
               fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
             ),
           ),
@@ -180,7 +180,7 @@ class _ConversationTile extends StatelessWidget {
               width: 8,
               height: 8,
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor,
+                color: AppTheme.lightTheme.primaryColor,
                 shape: BoxShape.circle,
               ),
             ),

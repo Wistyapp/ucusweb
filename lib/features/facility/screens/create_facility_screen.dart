@@ -134,8 +134,8 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
     });
 
     try {
-      final authProvider = context.read<AuthProvider>();
-      final facilityProvider = context.read<FacilityProvider>();
+      final authProvider = context.read<AppAuthProvider>();
+      final facilityProvider = context.read<AppFacilityProvider>();
 
       // Create facility data
       final facilityData = {
@@ -250,7 +250,7 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isActive
-                        ? AppTheme.primaryColor
+                        ? AppTheme.lightTheme.primaryColor
                         : isCompleted
                             ? Colors.green
                             : Colors.grey[300],
@@ -495,12 +495,12 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
               width: double.infinity,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: AppTheme.primaryColor,
+                  color: AppTheme.lightTheme.primaryColor,
                   width: 2,
                   style: BorderStyle.solid,
                 ),
                 borderRadius: BorderRadius.circular(12),
-                color: AppTheme.primaryColor.withOpacity(0.05),
+                color: AppTheme.lightTheme.primaryColor.withValues(alpha: 0.05),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -508,13 +508,13 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
                   Icon(
                     Icons.add_photo_alternate,
                     size: 48,
-                    color: AppTheme.primaryColor,
+                    color: AppTheme.lightTheme.primaryColor,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Ajouter des photos',
                     style: TextStyle(
-                      color: AppTheme.primaryColor,
+                      color: AppTheme.lightTheme.primaryColor,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -561,7 +561,7 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
                                   ),
                                   margin: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor,
+                                    color: AppTheme.lightTheme.primaryColor,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: const Text(
@@ -655,8 +655,8 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
                     _selectedAmenities[amenity] = selected;
                   });
                 },
-                selectedColor: AppTheme.primaryColor.withOpacity(0.2),
-                checkmarkColor: AppTheme.primaryColor,
+                selectedColor: AppTheme.lightTheme.primaryColor.withOpacity(0.2),
+                checkmarkColor: AppTheme.lightTheme.primaryColor,
               );
             }).toList(),
           ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import 'custom_button.dart';
 
-class EmptyState extends StatelessWidget {
+class EmptyStateWidget extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? description;
@@ -11,7 +11,7 @@ class EmptyState extends StatelessWidget {
   final double iconSize;
   final Color? iconColor;
 
-  const EmptyState({
+  const EmptyStateWidget({
     super.key,
     required this.icon,
     required this.title,
@@ -121,7 +121,7 @@ class ErrorState extends StatelessWidget {
                 text: 'Réessayer',
                 onPressed: onRetry,
                 icon: Icons.refresh,
-                type: ButtonType.outline,
+                //type: ButtonType.outline,
               ),
             ],
           ],
@@ -138,7 +138,7 @@ class NoConnectionState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return EmptyState(
+    return EmptyStateWidget(
       icon: Icons.wifi_off,
       title: 'Pas de connexion',
       description: 'Vérifiez votre connexion internet et réessayez.',

@@ -19,7 +19,7 @@ class ReviewsScreen extends StatefulWidget {
 }
 
 class _ReviewsScreenState extends State<ReviewsScreen> {
-  List<Review> _reviews = [];
+  List<ReviewModel> _reviews = [];
   bool _isLoading = true;
   double _averageRating = 0;
   Map<int, int> _ratingDistribution = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
@@ -134,7 +134,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                   _averageRating.toStringAsFixed(1),
                   style: Theme.of(context).textTheme.displayMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
+                    color: AppTheme.lightTheme.primaryColor,
                   ),
                 ),
                 Row(
@@ -189,7 +189,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                             child: LinearProgressIndicator(
                               value: percentage,
                               backgroundColor: Colors.grey[200],
-                              valueColor: AlwaysStoppedAnimation(AppTheme.primaryColor),
+                              valueColor: AlwaysStoppedAnimation(AppTheme.lightTheme.primaryColor),
                               minHeight: 8,
                             ),
                           ),
@@ -227,7 +227,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
             label: const Text('Tous'),
             selected: true,
             onSelected: (_) {},
-            selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+            selectedColor: AppTheme.lightTheme.primaryColor.withValues(alpha:0.2),
           ),
           const SizedBox(width: 8),
           FilterChip(
@@ -254,7 +254,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
 }
 
 class _ReviewCard extends StatelessWidget {
-  final Review review;
+  final ReviewModel review;
 
   const _ReviewCard({required this.review});
 
@@ -271,11 +271,11 @@ class _ReviewCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                  backgroundColor: AppTheme.lightTheme.primaryColor.withValues(alpha:0.1),
                   child: Text(
                     'U', // Would show reviewer initials
                     style: TextStyle(
-                      color: AppTheme.primaryColor,
+                      color: AppTheme.lightTheme.primaryColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -340,30 +340,7 @@ class _ReviewCard extends StatelessWidget {
                 style: const TextStyle(height: 1.5),
               ),
             ],
-            if (review.categoryRatings != null) ...[
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 8),
-              Text(
-                'Détails',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[700],
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 16,
-                runSpacing: 8,
-                children: review.categoryRatings!.entries.map((entry) {
-                  return _CategoryRating(
-                    label: _getCategoryLabel(entry.key),
-                    rating: entry.value,
-                  );
-                }).toList(),
-              ),
-            ],
+
             if (review.photos != null && review.photos!.isNotEmpty) ...[
               const SizedBox(height: 16),
               SizedBox(

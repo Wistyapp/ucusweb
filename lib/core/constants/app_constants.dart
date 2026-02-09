@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class AppConstants {
   // App Info
   static const String appName = 'UnCoachUneSalle';
@@ -97,22 +99,7 @@ class PaymentStatus {
   static const String refunded = 'refunded';
 }
 
-class Amenities {
-  static const List<Map<String, dynamic>> all = [
-    {'id': 'wifi', 'name': 'WiFi', 'icon': 'wifi'},
-    {'id': 'parking', 'name': 'Parking', 'icon': 'local_parking'},
-    {'id': 'shower', 'name': 'Douches', 'icon': 'shower'},
-    {'id': 'locker', 'name': 'Casiers', 'icon': 'lock'},
-    {'id': 'ac', 'name': 'Climatisation', 'icon': 'ac_unit'},
-    {'id': 'heating', 'name': 'Chauffage', 'icon': 'whatshot'},
-    {'id': 'mirror', 'name': 'Miroirs', 'icon': 'crop_square'},
-    {'id': 'sound_system', 'name': 'Système audio', 'icon': 'speaker'},
-    {'id': 'water_fountain', 'name': 'Fontaine à eau', 'icon': 'water_drop'},
-    {'id': 'accessible', 'name': 'Accès PMR', 'icon': 'accessible'},
-    {'id': 'changing_room', 'name': 'Vestiaires', 'icon': 'checkroom'},
-    {'id': 'towels', 'name': 'Serviettes', 'icon': 'dry'},
-  ];
-}
+
 
 class Specialties {
   static const List<String> all = [
@@ -165,31 +152,153 @@ class Specialties {
   }
 }
 
-class FacilityTypes {
-  static const List<String> all = [
-    'gym',
-    'studio',
-    'dojo',
-    'crossfit_box',
-    'pool',
-    'court',
-    'outdoor',
-    'wellness_center',
-    'community_center',
+
+
+
+
+
+
+class AppUserTypes {
+  static const String coach = 'coach';
+  static const String facility = 'facility';
+}
+
+/// Statuts de réservation
+
+
+/// Statuts de paiement
+
+
+/// Liste des équipements disponibles
+class Amenities {
+  static const List<Map<String, dynamic>> all = [
+    {'id': 'parking', 'name': 'Parking', 'icon': Icons.local_parking},
+    {'id': 'wifi', 'name': 'WiFi', 'icon': Icons.wifi},
+    {'id': 'showers', 'name': 'Douches', 'icon': Icons.shower},
+    {'id': 'lockers', 'name': 'Casiers', 'icon': Icons.lock},
+    {'id': 'air_conditioning', 'name': 'Climatisation', 'icon': Icons.ac_unit},
+    {'id': 'heating', 'name': 'Chauffage', 'icon': Icons.thermostat},
+    {'id': 'sound_system', 'name': 'Système audio', 'icon': Icons.speaker},
+    {'id': 'mirrors', 'name': 'Miroirs', 'icon': Icons.crop_square},
+    {'id': 'mats', 'name': 'Tapis', 'icon': Icons.rectangle},
+    {'id': 'weights', 'name': 'Poids libres', 'icon': Icons.fitness_center},
+    {'id': 'cardio', 'name': 'Équipement cardio', 'icon': Icons.directions_run},
+    {'id': 'accessible', 'name': 'Accès handicapé', 'icon': Icons.accessible},
+    {'id': 'changing_rooms', 'name': 'Vestiaires', 'icon': Icons.checkroom},
+    {'id': 'towels', 'name': 'Serviettes', 'icon': Icons.dry_cleaning},
+    {'id': 'water_fountain', 'name': 'Fontaine à eau', 'icon': Icons.water_drop},
+    {'id': 'first_aid', 'name': 'Premiers secours', 'icon': Icons.medical_services},
   ];
 
-  static String getDisplayName(String type) {
-    final names = {
-      'gym': 'Salle de sport',
-      'studio': 'Studio',
-      'dojo': 'Dojo',
-      'crossfit_box': 'Box CrossFit',
-      'pool': 'Piscine',
-      'court': 'Terrain',
-      'outdoor': 'Espace extérieur',
-      'wellness_center': 'Centre de bien-être',
-      'community_center': 'Centre communautaire',
-    };
-    return names[type] ?? type;
+  static Map<String, dynamic>? getById(String id) {
+    try {
+      return all.firstWhere((a) => a['id'] == id);
+    } catch (_) {
+      return null;
+    }
   }
+
+  static String getName(String id) {
+    return getById(id)?['name'] ?? id;
+  }
+
+  static IconData getIcon(String id) {
+    return getById(id)?['icon'] ?? Icons.check;
+  }
+}
+
+/// Types de facilities
+class FacilityTypes {
+  static const List<Map<String, dynamic>> all = [
+    {'id': 'gym', 'name': 'Salle de sport', 'icon': Icons.fitness_center},
+    {'id': 'studio', 'name': 'Studio', 'icon': Icons.room},
+    {'id': 'outdoor', 'name': 'Espace extérieur', 'icon': Icons.park},
+    {'id': 'pool', 'name': 'Piscine', 'icon': Icons.pool},
+    {'id': 'court', 'name': 'Terrain', 'icon': Icons.sports_tennis},
+    {'id': 'dojo', 'name': 'Dojo', 'icon': Icons.sports_martial_arts},
+    {'id': 'crossfit', 'name': 'Box CrossFit', 'icon': Icons.sports_gymnastics},
+    {'id': 'yoga', 'name': 'Studio yoga', 'icon': Icons.self_improvement},
+    {'id': 'dance', 'name': 'Studio danse', 'icon': Icons.music_note},
+    {'id': 'boxing', 'name': 'Salle de boxe', 'icon': Icons.sports_mma},
+    {'id': 'pilates', 'name': 'Studio Pilates', 'icon': Icons.accessibility_new},
+    {'id': 'climbing', 'name': 'Mur d\'escalade', 'icon': Icons.terrain},
+  ];
+
+  static Map<String, dynamic>? getById(String id) {
+    try {
+      return all.firstWhere((t) => t['id'] == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String getName(String id) {
+    return getById(id)?['name'] ?? id;
+  }
+
+  static IconData getIcon(String id) {
+    return getById(id)?['icon'] ?? Icons.business;
+  }
+}
+
+/// Spécialités des coachs
+class CoachSpecialties {
+  static const List<Map<String, dynamic>> all = [
+    {'id': 'personal_training', 'name': 'Personal training'},
+    {'id': 'weight_loss', 'name': 'Perte de poids'},
+    {'id': 'muscle_gain', 'name': 'Prise de masse'},
+    {'id': 'cardio', 'name': 'Cardio'},
+    {'id': 'strength', 'name': 'Force'},
+    {'id': 'hiit', 'name': 'HIIT'},
+    {'id': 'crossfit', 'name': 'CrossFit'},
+    {'id': 'yoga', 'name': 'Yoga'},
+    {'id': 'pilates', 'name': 'Pilates'},
+    {'id': 'boxing', 'name': 'Boxe'},
+    {'id': 'martial_arts', 'name': 'Arts martiaux'},
+    {'id': 'swimming', 'name': 'Natation'},
+    {'id': 'running', 'name': 'Course à pied'},
+    {'id': 'cycling', 'name': 'Cyclisme'},
+    {'id': 'rehabilitation', 'name': 'Rééducation'},
+    {'id': 'senior_fitness', 'name': 'Fitness senior'},
+    {'id': 'prenatal', 'name': 'Prénatal'},
+    {'id': 'postnatal', 'name': 'Postnatal'},
+    {'id': 'nutrition', 'name': 'Nutrition'},
+    {'id': 'stretching', 'name': 'Stretching'},
+  ];
+}
+
+/// Configuration de l'application
+class AppConfigConstants {
+  static const String appName = 'UnCoachUneSalle';
+  static const String appVersion = '1.0.0';
+
+  // Commission plateforme (en pourcentage)
+  static const double platformCommissionRate = 0.15; // 10%
+
+  // Durées de réservation
+  static const int minBookingDurationMinutes = 30;
+  static const int maxBookingDurationMinutes = 480; // 8 heures
+  static const int bookingSlotIntervalMinutes = 30;
+
+  // Délais
+  static const int minAdvanceBookingHours = 2; // Réserver au moins 2h à l'avance
+  static const int maxAdvanceBookingDays = 60; // Réserver jusqu'à 60 jours à l'avance
+  static const int cancellationDeadlineHours = 24; // Annulation gratuite jusqu'à 24h avant
+
+  // Pagination
+  static const int defaultPageSize = 20;
+
+  // Images
+  static const int maxFacilityImages = 10;
+  static const int maxProfileImageSizeBytes = 5 * 1024 * 1024; // 5 MB
+}
+
+/// Messages d'erreur communs
+class AppErrorMessages {
+  static const String networkError = 'Erreur de connexion. Vérifiez votre connexion internet.';
+  static const String unknownError = 'Une erreur inattendue est survenue. Veuillez réessayer.';
+  static const String authError = 'Erreur d\'authentification. Veuillez vous reconnecter.';
+  static const String permissionDenied = 'Vous n\'avez pas la permission d\'effectuer cette action.';
+  static const String notFound = 'Élément non trouvé.';
+  static const String invalidData = 'Données invalides.';
 }

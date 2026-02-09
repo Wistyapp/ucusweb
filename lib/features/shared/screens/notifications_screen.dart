@@ -155,10 +155,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
 
     if (_notifications.isEmpty) {
-      return const EmptyState(
+      return const EmptyStateWidget(
         icon: Icons.notifications_none,
         title: 'Aucune notification',
-        message: 'Vous n\'avez pas de notification pour le moment.',
+        description: 'Vous n\'avez pas de notification pour le moment.',
       );
     }
 
@@ -339,7 +339,7 @@ class _NotificationItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          color: notification.isRead ? null : AppTheme.primaryColor.withOpacity(0.05),
+          color: notification.isRead ? null : AppTheme.lightTheme.primaryColor.withValues(alpha: 0.05),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,8 +378,8 @@ class _NotificationItem extends StatelessWidget {
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: const BoxDecoration(
-                              color: AppTheme.primaryColor,
+                            decoration: BoxDecoration(
+                              color: AppTheme.lightTheme.primaryColor,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -445,7 +445,7 @@ class _NotificationItem extends StatelessWidget {
       case 'new_review':
         return Colors.amber;
       case 'payment_received':
-        return AppTheme.primaryColor;
+        return AppTheme.lightTheme.primaryColor;
       default:
         return Colors.grey;
     }
@@ -558,7 +558,7 @@ class _NotificationSettingsSheetState extends State<_NotificationSettingsSheet> 
       subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       value: value,
       onChanged: onChanged,
-      activeColor: AppTheme.primaryColor,
+      activeColor: AppTheme.lightTheme.primaryColor,
       contentPadding: EdgeInsets.zero,
     );
   }

@@ -74,7 +74,7 @@ class _AvailabilityManagementScreenState extends State<AvailabilityManagementScr
     setState(() => _isLoading = true);
     
     try {
-      final facilityProvider = context.read<FacilityProvider>();
+      final facilityProvider = context.read<AppFacilityProvider>();
       
       // Convert schedules to Firestore format
       final availabilityData = {
@@ -87,19 +87,19 @@ class _AvailabilityManagementScreenState extends State<AvailabilityManagementScr
           },
         )),
         'blockedDates': _blockedDates.map((d) => {
-          return {
+          {
             'date': d.date.toIso8601String(),
             'reason': d.reason,
-          };
+          }
         }).toList(),
         'specialRates': _specialRates.map((r) => {
-          return {
+           {
             'date': r.date.toIso8601String(),
             'startTime': '${r.startTime.hour.toString().padLeft(2, '0')}:${r.startTime.minute.toString().padLeft(2, '0')}',
             'endTime': '${r.endTime.hour.toString().padLeft(2, '0')}:${r.endTime.minute.toString().padLeft(2, '0')}',
             'rate': r.rate,
             'reason': r.reason,
-          };
+          }
         }).toList(),
       };
       
