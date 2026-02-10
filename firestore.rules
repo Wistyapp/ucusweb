@@ -1,0 +1,262 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =============================================
+    // HELPER FUNCTIONS
+    // =============================================
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user has a specific type (coach or facility)
+    function getUserType() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.type;
+    }
+
+    function isCoach() {
+      return isAuthenticated() && getUserType() == 'coach';
+    }
+
+    function isFacilityOwner() {
+      return isAuthenticated() && getUserType() == 'facility';
+    }
+
+    // Validate required fields exist
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Check if field is not being modified
+    function fieldNotChanged(field) {
+      return !(field in request.resource.data) ||
+             request.resource.data[field] == resource.data[field];
+    }
+
+    // =============================================
+    // USERS COLLECTION
+    // =============================================
+    match /users/{userId} {
+      // Anyone authenticated can read user profiles
+      allow read: if isAuthenticated();
+
+      // Users can only create their own profile
+      allow create: if isOwner(userId) &&
+                    hasRequiredFields(['email', 'displayName', 'type', 'createdAt']);
+
+      // Users can only update their own profile
+      allow update: if isOwner(userId) &&
+                    fieldNotChanged('uid') &&
+                    fieldNotChanged('email') &&
+                    fieldNotChanged('type') &&
+                    fieldNotChanged('createdAt');
+
+      // Users cannot delete their profile directly (handled by Cloud Functions)
+      allow delete: if false;
+
+      // Coach profiles subcollection
+      match /coachProfiles/{profileId} {
+        allow read: if isAuthenticated();
+        allow write: if isOwner(userId);
+      }
+
+      // Facility profiles subcollection
+      match /facilityProfiles/{profileId} {
+        allow read: if isAuthenticated();
+        allow write: if isOwner(userId);
+      }
+    }
+
+    // =============================================
+    // FACILITIES COLLECTION
+    // =============================================
+    match /facilities/{facilityId} {
+      // Anyone authenticated can read active facilities
+      allow read: if isAuthenticated();
+
+      // Only facility owners can create facilities
+      allow create: if isFacilityOwner() &&
+                    request.resource.data.ownerId == request.auth.uid &&
+                    hasRequiredFields(['ownerId', 'name', 'address', 'hourlyRate', 'createdAt']);
+
+      // Only the facility owner can update their facility
+      allow update: if isAuthenticated() &&
+                    resource.data.ownerId == request.auth.uid &&
+                    fieldNotChanged('ownerId') &&
+                    fieldNotChanged('createdAt');
+
+      // Only the facility owner can delete (soft delete)
+      allow delete: if isAuthenticated() &&
+                    resource.data.ownerId == request.auth.uid;
+
+      // Spaces subcollection
+      match /spaces/{spaceId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() &&
+                     get(/databases/$(database)/documents/facilities/$(facilityId)).data.ownerId == request.auth.uid;
+      }
+
+      // Availability subcollection
+      match /availability/{availabilityId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() &&
+                     get(/databases/$(database)/documents/facilities/$(facilityId)).data.ownerId == request.auth.uid;
+      }
+    }
+
+    // =============================================
+    // BOOKINGS COLLECTION
+    // =============================================
+    match /bookings/{bookingId} {
+      // Coaches can read their own bookings
+      // Facility owners can read bookings for their facilities
+      allow read: if isAuthenticated() &&
+                  (resource.data.coachId == request.auth.uid ||
+                   resource.data.facilityOwnerId == request.auth.uid);
+
+      // Only coaches can create bookings
+      allow create: if isCoach() &&
+                    request.resource.data.coachId == request.auth.uid &&
+                    hasRequiredFields(['coachId', 'facilityId', 'startTime', 'endTime', 'status', 'createdAt']);
+
+      // Updates are handled by Cloud Functions for most cases
+      // Coaches can cancel their pending bookings
+      allow update: if isAuthenticated() &&
+                    (
+                      // Coach can cancel their booking
+                      (resource.data.coachId == request.auth.uid &&
+                       request.resource.data.status == 'cancelled' &&
+                       resource.data.status == 'pending') ||
+                      // Facility owner can confirm/cancel bookings
+                      (resource.data.facilityOwnerId == request.auth.uid &&
+                       resource.data.status == 'pending' &&
+                       (request.resource.data.status == 'confirmed' ||
+                        request.resource.data.status == 'cancelled'))
+                    );
+
+      // Bookings cannot be deleted
+      allow delete: if false;
+    }
+
+    // =============================================
+    // REVIEWS COLLECTION
+    // =============================================
+    match /reviews/{reviewId} {
+      // Anyone authenticated can read reviews
+      allow read: if isAuthenticated();
+
+      // Users can create reviews if they participated in the booking
+      allow create: if isAuthenticated() &&
+                    request.resource.data.reviewerId == request.auth.uid &&
+                    hasRequiredFields(['reviewerId', 'revieweeId', 'bookingId', 'reviewType', 'overallRating', 'createdAt']);
+
+      // Reviews can be updated by the reviewer (for moderation response)
+      allow update: if isOwner(resource.data.reviewerId) &&
+                    fieldNotChanged('reviewerId') &&
+                    fieldNotChanged('revieweeId') &&
+                    fieldNotChanged('bookingId') &&
+                    fieldNotChanged('reviewType') &&
+                    fieldNotChanged('overallRating') &&
+                    fieldNotChanged('createdAt');
+
+      // Reviews cannot be deleted (only hidden by admin via Cloud Functions)
+      allow delete: if false;
+    }
+
+    // =============================================
+    // MESSAGES COLLECTION
+    // =============================================
+    match /messages/{conversationId} {
+      // Only participants can read conversations
+      allow read: if isAuthenticated() &&
+                  request.auth.uid in resource.data.participants;
+
+      // Participants can create/update conversations
+      allow create: if isAuthenticated() &&
+                    request.auth.uid in request.resource.data.participants;
+
+      allow update: if isAuthenticated() &&
+                    request.auth.uid in resource.data.participants;
+
+      allow delete: if false;
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() &&
+                    request.auth.uid in get(/databases/$(database)/documents/messages/$(conversationId)).data.participants;
+
+        allow create: if isAuthenticated() &&
+                      request.auth.uid in get(/databases/$(database)/documents/messages/$(conversationId)).data.participants &&
+                      request.resource.data.senderId == request.auth.uid;
+
+        allow update: if isOwner(resource.data.senderId) &&
+                      fieldNotChanged('senderId') &&
+                      fieldNotChanged('createdAt');
+
+        allow delete: if false;
+      }
+    }
+
+    // =============================================
+    // PAYMENTS COLLECTION
+    // =============================================
+    match /payments/{paymentId} {
+      // Users can only read their own payments
+      allow read: if isAuthenticated() &&
+                  (resource.data.userId == request.auth.uid ||
+                   resource.data.facilityOwnerId == request.auth.uid);
+
+      // Payments are created only by Cloud Functions
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // =============================================
+    // AVAILABILITY COLLECTION
+    // =============================================
+    match /availability/{availabilityId} {
+      // Anyone authenticated can read availability
+      allow read: if isAuthenticated();
+
+      // Only facility owner can write availability
+      allow write: if isAuthenticated() &&
+                   get(/databases/$(database)/documents/facilities/$(resource.data.facilityId)).data.ownerId == request.auth.uid;
+    }
+
+    // =============================================
+    // ANALYTICS COLLECTION (Read-only for owners)
+    // =============================================
+    match /analytics/{analyticsId} {
+      allow read: if isAuthenticated() &&
+                  resource.data.ownerId == request.auth.uid;
+
+      // Analytics are managed by Cloud Functions only
+      allow write: if false;
+    }
+
+    // =============================================
+    // NOTIFICATIONS COLLECTION
+    // =============================================
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() &&
+                  resource.data.userId == request.auth.uid;
+
+      // Users can mark their notifications as read
+      allow update: if isAuthenticated() &&
+                    resource.data.userId == request.auth.uid &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']);
+
+      // Notifications are created by Cloud Functions
+      allow create: if false;
+      allow delete: if false;
+    }
+  }
+}
