@@ -38,6 +38,7 @@ class BookingModel extends Equatable {
 
   // Denormalized data for display
   final String? facilityName;
+  final String? facilityAddress;
   final String? facilityImage;
   final String? spaceName;
   final String? coachName;
@@ -77,6 +78,7 @@ class BookingModel extends Equatable {
     this.reminderSentAt,
     this.facilityName,
     this.facilityImage,
+    this.facilityAddress,
     this.spaceName,
     this.coachName,
     this.coachImage,
@@ -166,6 +168,7 @@ class BookingModel extends Equatable {
       reminderSentAt: (data['reminderSentAt'] as Timestamp?)?.toDate(),
       facilityName: data['facilityName'],
       facilityImage: data['facilityImage'],
+      facilityAddress: data['facilityAddress'],
       spaceName: data['spaceName'],
       coachName: data['coachName'],
       coachImage: data['coachImage'],
@@ -210,6 +213,7 @@ class BookingModel extends Equatable {
           : null,
       'facilityName': facilityName,
       'facilityImage': facilityImage,
+      'facilityAddress': facilityAddress,
       'spaceName': spaceName,
       'coachName': coachName,
       'coachImage': coachImage,
@@ -250,6 +254,7 @@ class BookingModel extends Equatable {
     DateTime? reminderSentAt,
     String? facilityName,
     String? facilityImage,
+    String? facilityAddress,
     String? spaceName,
     String? coachName,
     String? coachImage,
@@ -288,6 +293,7 @@ class BookingModel extends Equatable {
       reminderSentAt: reminderSentAt ?? this.reminderSentAt,
       facilityName: facilityName ?? this.facilityName,
       facilityImage: facilityImage ?? this.facilityImage,
+      facilityAddress: facilityAddress ?? this.facilityAddress,
       spaceName: spaceName ?? this.spaceName,
       coachName: coachName ?? this.coachName,
       coachImage: coachImage ?? this.coachImage,
@@ -296,6 +302,9 @@ class BookingModel extends Equatable {
 
   @override
   List<Object?> get props => [id, coachId, facilityId, status, startTime, endTime];
+
+
+
 }
 
 // Helper class for creating bookings

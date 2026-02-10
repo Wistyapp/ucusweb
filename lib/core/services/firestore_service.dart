@@ -109,6 +109,41 @@ class FirestoreService {
         .toList());
   }
 
+  /// Met à jour les disponibilités d'une installation
+  Future<void> updateFacilityAvailability(
+      String facilityId,
+      Map<String, dynamic> availabilityData,
+      ) async {
+    await _firestore
+        .collection(FirestoreCollections.facilities)
+        .doc(facilityId)
+        .update({
+      'availability': availabilityData,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+
+
+  /// Récupère toutes les réservations pour un propriétaire de salle (par facilityOwnerId)
+  Future<List<BookingModel>> getBookingsByFacilityOwner(String ownerId) async {
+    try {
+      final snapshot = await _firestore
+          .collection(FirestoreCollections.bookings)
+          .where('facilityOwnerId', isEqualTo: ownerId)
+          .orderBy('startTime', descending: true)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => BookingModel.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      throw Exception('Erreur lors du chargement des réservations: $e');
+    }
+  }
+
+
+
   // Search facilities
   Future<List<FacilityModel>> searchFacilities({
     String? city,

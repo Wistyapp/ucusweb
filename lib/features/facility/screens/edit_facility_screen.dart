@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:uncoachunesalle/core/models/address_model.dart';
 
 import '../../../core/providers/app_facility_provider.dart';
 import '../../../core/models/facility_model.dart';
+import '../../../core/models/address_model.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
@@ -22,7 +22,7 @@ class EditFacilityScreen extends StatefulWidget {
 
 class _EditFacilityScreenState extends State<EditFacilityScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
@@ -32,15 +32,13 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
   late TextEditingController _hourlyRateController;
   late TextEditingController _peakHourRateController;
   late TextEditingController _capacityController;
-  late TextEditingController _websiteController;
-  
+
   // State
   FacilityModel? _facility;
   bool _isLoading = true;
   bool _isSaving = false;
   List<String> _images = [];
-  List<String> _selectedAmenities = [];
-  List<String> _equipmentList = [];
+  Map<String, bool> _selectedAmenities = {}; // ✅ Corrigé: Map au lieu de List
 
   // All available amenities
   final List<Map<String, dynamic>> _allAmenities = [
@@ -74,14 +72,15 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
     _hourlyRateController = TextEditingController();
     _peakHourRateController = TextEditingController();
     _capacityController = TextEditingController();
-    _websiteController = TextEditingController();
   }
 
   Future<void> _loadFacility() async {
     try {
       final facilityProvider = Provider.of<AppFacilityProvider>(context, listen: false);
+
+      // ✅ Corrigé: Utiliser getFacilityById ou loadFacility + selectedFacility
       final facility = await facilityProvider.getFacilityById(widget.facilityId);
-      
+
       if (facility != null) {
         setState(() {
           _facility = facility;
@@ -91,14 +90,20 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
           _cityController.text = facility.address.city;
           _postalCodeController.text = facility.address.postalCode;
           _hourlyRateController.text = facility.hourlyRate.toString();
-          _peakHourRateController.text = facility.peakHourRate.toString();
+          _peakHourRateController.text = (facility.peakHourRate ?? facility.hourlyRate).toString();
           _capacityController.text = facility.capacity.toString();
-          _websiteController.text = facility.websiteUrl ?? '';
           _images = List.from(facility.images);
-          _selectedAmenities = List.from(facility.amenities);
-          _equipmentList = List.from(facility.equipmentList);
+          // ✅ Corrigé: amenities est déjà un Map<String, bool>
+          _selectedAmenities = Map<String, bool>.from(facility.amenities);
           _isLoading = false;
         });
+      } else {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Salle non trouvée')),
+          );
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -120,7 +125,6 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
     _hourlyRateController.dispose();
     _peakHourRateController.dispose();
     _capacityController.dispose();
-    _websiteController.dispose();
     super.dispose();
   }
 
@@ -293,22 +297,6 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
           // Amenities Section
           _buildSectionTitle('Équipements'),
           _buildAmenitiesSection(),
-          const SizedBox(height: 24),
-
-          // Equipment List Section
-          _buildSectionTitle('Liste d\'équipements'),
-          _buildEquipmentSection(),
-          const SizedBox(height: 24),
-
-          // Website Section
-          _buildSectionTitle('Site web (optionnel)'),
-          CustomTextField(
-            controller: _websiteController,
-            label: 'URL du site web',
-            hint: 'https://www.votre-site.fr',
-            prefixIcon: Icons.language,
-            keyboardType: TextInputType.url,
-          ),
           const SizedBox(height: 32),
 
           // Save Button
@@ -434,7 +422,9 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
       spacing: 8,
       runSpacing: 8,
       children: _allAmenities.map((amenity) {
-        final isSelected = _selectedAmenities.contains(amenity['id']);
+        final amenityId = amenity['id'] as String;
+        // ✅ Corrigé: vérifie si la clé existe et vaut true
+        final isSelected = _selectedAmenities[amenityId] == true;
         return FilterChip(
           label: Row(
             mainAxisSize: MainAxisSize.min,
@@ -451,11 +441,8 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
           selected: isSelected,
           onSelected: (selected) {
             setState(() {
-              if (selected) {
-                _selectedAmenities.add(amenity['id'] as String);
-              } else {
-                _selectedAmenities.remove(amenity['id']);
-              }
+              // ✅ Corrigé: met à jour le Map
+              _selectedAmenities[amenityId] = selected;
             });
           },
           selectedColor: AppTheme.lightTheme.primaryColor,
@@ -468,59 +455,15 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
     );
   }
 
-  Widget _buildEquipmentSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Existing equipment
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _equipmentList.map((equipment) {
-            return Chip(
-              label: Text(equipment),
-              onDeleted: () {
-                setState(() => _equipmentList.remove(equipment));
-              },
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 12),
-        // Add new equipment
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                decoration: const InputDecoration(
-                  hintText: 'Ajouter un équipement...',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
-                onSubmitted: (value) {
-                  if (value.isNotEmpty && !_equipmentList.contains(value)) {
-                    setState(() => _equipmentList.add(value));
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Future<void> _addImage() async {
     final picker = ImagePicker();
     final image = await picker.pickImage(source: ImageSource.gallery);
-    
+
     if (image != null) {
-      // In a real app, you would upload the image to Firebase Storage
-      // and get the download URL
+      // TODO: Upload l'image vers Firebase Storage et récupérer l'URL
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Upload d\'image en cours...')),
+        const SnackBar(content: Text('Fonctionnalité d\'upload à implémenter')),
       );
-      // For now, just show a placeholder message
-      // setState(() => _images.add(downloadUrl));
     }
   }
 
@@ -539,40 +482,54 @@ class _EditFacilityScreenState extends State<EditFacilityScreen> {
 
     try {
       final facilityProvider = Provider.of<AppFacilityProvider>(context, listen: false);
-      
-      final updatedFacility = _facility!.copyWith(
-        name: _nameController.text,
-        description: _descriptionController.text,
-        address: AddressModel(
-          street: _streetController.text,
-          city: _cityController.text,
-          postalCode: _postalCodeController.text,
-          country: 'France',
-          //latitude: _facility!.address.latitude,
-          //longitude: _facility!.address.longitude,
-        ),
-        hourlyRate: double.parse(_hourlyRateController.text),
-        peakHourRate: double.tryParse(_peakHourRateController.text) ?? double.parse(_hourlyRateController.text),
+
+      // ✅ Corrigé: Appel avec les paramètres nommés attendus par updateFacility
+      final success = await facilityProvider.updateFacility(
+        facilityId: widget.facilityId,
+        name: _nameController.text.trim(),
+        description: _descriptionController.text.trim(),
+        amenities: _selectedAmenities, // ✅ Map<String, bool>
         capacity: int.parse(_capacityController.text),
+        hourlyRate: double.parse(_hourlyRateController.text),
+        peakHourRate: double.tryParse(_peakHourRateController.text),
+        address: AddressModel(
+          street: _streetController.text.trim(),
+          city: _cityController.text.trim(),
+          postalCode: _postalCodeController.text.trim(),
+          country: 'France',
+        ),
         images: _images,
-        amenities: _selectedAmenities,
-        //equipmentList: _equipmentList,
-        //websiteUrl: _websiteController.text.isNotEmpty ? _websiteController.text : null,
-        updatedAt: DateTime.now(),
       );
 
-      await facilityProvider.updateFacility(updatedFacility);
 
-      if (mounted) {
+
+      // ✅ Mise à jour de l'adresse séparément si nécessaire
+      // Note: Tu peux ajouter une méthode updateFacilityAddress dans le provider
+      // ou étendre updateFacility pour accepter l'adresse
+
+      if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Modifications enregistrées')),
+          const SnackBar(
+            content: Text('Modifications enregistrées'),
+            backgroundColor: Colors.green,
+          ),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true); // true indique que des changements ont été faits
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: ${facilityProvider.error ?? "Erreur inconnue"}'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: ${e.toString()}')),
+          SnackBar(
+            content: Text('Erreur: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/models/address_model.dart';
 import '../../../core/providers/app_auth_provider.dart';
 import '../../../core/providers/app_facility_provider.dart';
 import '../../../core/models/facility_model.dart';
@@ -171,9 +172,24 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
       };
 
       await facilityProvider.createFacility(
-        facilityData,
-        _selectedImages.map((x) => File(x.path)).toList(),
+        ownerId: authProvider.user!.uid,
+        name: _nameController.text.trim(),
+        description: _descriptionController.text.trim(),
+        address: AddressModel(
+          street: _streetController.text.trim(),
+          city: _cityController.text.trim(),
+          postalCode: _postalCodeController.text.trim(),
+          country: 'France',
+        ),
+        amenities: _selectedAmenities,
+        capacity: int.parse(_capacityController.text),
+        hourlyRate: double.parse(_hourlyRateController.text),
+        peakHourRate: _peakHourRateController.text.isNotEmpty
+            ? double.parse(_peakHourRateController.text)
+            : null,
+        images: _selectedImages,
       );
+
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

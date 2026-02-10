@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:uncoachunesalle/core/providers/app_user_provider.dart';
 import '../../../core/providers/app_auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -60,9 +61,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final authProvider = context.read<AppAuthProvider>();
+      final appUserProvider = context.read<AppUserProvider>();
       
-      await authProvider.updateProfile(
+      await appUserProvider.updateProfile(
         displayName: _displayNameController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
       );

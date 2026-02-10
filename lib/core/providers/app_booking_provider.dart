@@ -3,6 +3,7 @@ import '../models/booking_model.dart';
 import '../services/firestore_service.dart';
 import '../services/booking_service.dart';
 import '../services/payment_service.dart';
+import '../constants/app_constants.dart';
 
 class AppBookingProvider extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
@@ -11,17 +12,22 @@ class AppBookingProvider extends ChangeNotifier {
 
   List<BookingModel> _coachBookings = [];
   List<BookingModel> _facilityBookings = [];
+  List<BookingModel> _ownerBookings = []; // ✅ AJOUTÉ: pour les réservations du propriétaire
   BookingModel? _currentBooking;
   BookingPriceDetails? _priceDetails;
   bool _isLoading = false;
   String? _error;
 
+  // Getters existants
   List<BookingModel> get coachBookings => _coachBookings;
   List<BookingModel> get facilityBookings => _facilityBookings;
   BookingModel? get currentBooking => _currentBooking;
   BookingPriceDetails? get priceDetails => _priceDetails;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  // ✅ AJOUTÉ: Getter générique pour toutes les réservations du propriétaire
+  List<BookingModel> get bookings => _ownerBookings;
 
   List<BookingModel> get upcomingCoachBookings => _coachBookings
       .where((b) => b.isUpcoming)
@@ -38,6 +44,71 @@ class AppBookingProvider extends ChangeNotifier {
   List<BookingModel> get confirmedFacilityBookings => _facilityBookings
       .where((b) => b.isConfirmed)
       .toList();
+
+  /// ✅ AJOUTÉ: Charge toutes les réservations pour un propriétaire de salle
+  Future<void> loadFacilityOwnerBookings(String ownerId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _ownerBookings = await _firestoreService.getBookingsByFacilityOwner(ownerId);
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// ✅ AJOUTÉ: Confirme une réservation (change le statut de pending à confirmed)
+  Future<bool> confirmBooking(String bookingId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _bookingService.confirmBooking(bookingId);
+
+      // Mettre à jour localement
+      _ownerBookings = _ownerBookings.map((b) {
+        if (b.id == bookingId) {
+          return b.copyWith(
+            status: BookingStatus.confirmed,
+            confirmedAt: DateTime.now(),
+          );
+        }
+        return b;
+      }).toList();
+
+      _facilityBookings = _facilityBookings.map((b) {
+        if (b.id == bookingId) {
+          return b.copyWith(
+            status: BookingStatus.confirmed,
+            confirmedAt: DateTime.now(),
+          );
+        }
+        return b;
+      }).toList();
+
+      if (_currentBooking?.id == bookingId) {
+        _currentBooking = _currentBooking?.copyWith(
+          status: BookingStatus.confirmed,
+          confirmedAt: DateTime.now(),
+        );
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 
   /// Récupère une réservation par son ID
   Future<BookingModel?> getBookingById(String bookingId) async {
@@ -59,7 +130,6 @@ class AppBookingProvider extends ChangeNotifier {
       rethrow;
     }
   }
-
 
   Future<void> loadCoachBookings(String coachId) async {
     _isLoading = true;
@@ -140,6 +210,7 @@ class AppBookingProvider extends ChangeNotifier {
     required String facilityId,
     required String spaceId,
     required String facilityOwnerId,
+    required String conversationId,
     required DateTime startTime,
     required DateTime endTime,
     String? notes,
@@ -169,6 +240,7 @@ class AppBookingProvider extends ChangeNotifier {
         facilityId: facilityId,
         spaceId: spaceId,
         facilityOwnerId: facilityOwnerId,
+        conversationId: conversationId,
         startTime: startTime,
         endTime: endTime,
         totalPrice: _priceDetails!.totalPrice,
@@ -266,7 +338,7 @@ class AppBookingProvider extends ChangeNotifier {
         _coachBookings = _coachBookings.map((b) {
           if (b.id == bookingId) {
             return b.copyWith(
-              status: 'cancelled',
+              status: BookingStatus.cancelled,
               cancellationReason: reason,
               cancellationInitiatedBy: cancelledBy,
               cancelledAt: DateTime.now(),
@@ -278,7 +350,20 @@ class AppBookingProvider extends ChangeNotifier {
         _facilityBookings = _facilityBookings.map((b) {
           if (b.id == bookingId) {
             return b.copyWith(
-              status: 'cancelled',
+              status: BookingStatus.cancelled,
+              cancellationReason: reason,
+              cancellationInitiatedBy: cancelledBy,
+              cancelledAt: DateTime.now(),
+            );
+          }
+          return b;
+        }).toList();
+
+        // ✅ AJOUTÉ: Mettre à jour aussi _ownerBookings
+        _ownerBookings = _ownerBookings.map((b) {
+          if (b.id == bookingId) {
+            return b.copyWith(
+              status: BookingStatus.cancelled,
               cancellationReason: reason,
               cancellationInitiatedBy: cancelledBy,
               cancelledAt: DateTime.now(),
@@ -289,7 +374,7 @@ class AppBookingProvider extends ChangeNotifier {
 
         if (_currentBooking?.id == bookingId) {
           _currentBooking = _currentBooking?.copyWith(
-            status: 'cancelled',
+            status: BookingStatus.cancelled,
             cancellationReason: reason,
           );
         }

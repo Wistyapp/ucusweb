@@ -23,9 +23,9 @@ class _FacilityOwnerHomeScreenState extends State<FacilityOwnerHomeScreen> {
   }
 
   Future<void> _loadData() async {
-    final authProvider = context.read<AuthProvider>();
-    final facilityProvider = context.read<FacilityProvider>();
-    final bookingProvider = context.read<BookingProvider>();
+    final authProvider = context.read<AppAuthProvider>();
+    final facilityProvider = context.read<AppFacilityProvider>();
+    final bookingProvider = context.read<AppBookingProvider>();
 
     if (authProvider.user != null) {
       await facilityProvider.loadOwnerFacilities(authProvider.user!.uid);
@@ -93,9 +93,9 @@ class _DashboardTab extends StatelessWidget {
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: () async {
-          final authProvider = context.read<AuthProvider>();
-          final facilityProvider = context.read<FacilityProvider>();
-          final bookingProvider = context.read<BookingProvider>();
+          final authProvider = context.read<AppAuthProvider>();
+          final facilityProvider = context.read<AppFacilityProvider>();
+          final bookingProvider = context.read<AppBookingProvider>();
 
           if (authProvider.user != null) {
             await facilityProvider.loadOwnerFacilities(authProvider.user!.uid);
@@ -125,7 +125,7 @@ class _DashboardTab extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
+    final authProvider = context.watch<AppAuthProvider>();
     final user = authProvider.user;
 
     return Row(
@@ -162,10 +162,10 @@ class _DashboardTab extends StatelessWidget {
             const SizedBox(width: 8),
             CircleAvatar(
               radius: 24,
-              backgroundImage: user?.profileImage != null
-                  ? NetworkImage(user!.profileImage!)
+              backgroundImage: user?.photoURL != null
+                  ? NetworkImage(user!.photoURL!)
                   : null,
-              child: user?.profileImage == null
+              child: user?.photoURL == null
                   ? const Icon(Icons.person)
                   : null,
             ),
@@ -176,8 +176,8 @@ class _DashboardTab extends StatelessWidget {
   }
 
   Widget _buildQuickStats(BuildContext context) {
-    final bookingProvider = context.watch<BookingProvider>();
-    final facilityProvider = context.watch<FacilityProvider>();
+    final bookingProvider = context.watch<AppBookingProvider>();
+    final facilityProvider = context.watch<AppFacilityProvider>();
 
     final pendingBookings = bookingProvider.bookings
         .where((b) => b.status == BookingStatus.pending)
@@ -222,7 +222,7 @@ class _DashboardTab extends StatelessWidget {
           title: 'Mes Salles',
           value: totalFacilities.toString(),
           icon: Icons.business,
-          color: AppTheme.primaryColor,
+          color: AppTheme.lightTheme.primaryColor,
           onTap: () => Navigator.pushNamed(context, '/my-facilities'),
         ),
         _StatCard(
@@ -237,7 +237,7 @@ class _DashboardTab extends StatelessWidget {
   }
 
   Widget _buildTodayBookings(BuildContext context) {
-    final bookingProvider = context.watch<BookingProvider>();
+    final bookingProvider = context.watch<AppBookingProvider>();
     final now = DateTime.now();
     
     final todayBookings = bookingProvider.bookings.where((b) =>
@@ -299,10 +299,10 @@ class _DashboardTab extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                    backgroundColor: AppTheme.lightTheme.primaryColor.withValues(alpha: 0.1),
                     child: Icon(
                       Icons.fitness_center,
-                      color: AppTheme.primaryColor,
+                      color: AppTheme.lightTheme.primaryColor,
                     ),
                   ),
                   title: Text('${booking.startTime.hour}:${booking.startTime.minute.toString().padLeft(2, '0')} - ${booking.endTime.hour}:${booking.endTime.minute.toString().padLeft(2, '0')}'),
@@ -321,7 +321,7 @@ class _DashboardTab extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusChip(BookingStatus status) {
+  Widget _buildStatusChip(String status) {
     Color color;
     String label;
 
@@ -346,6 +346,9 @@ class _DashboardTab extends StatelessWidget {
         color = Colors.red;
         label = 'Annulée';
         break;
+        default:
+        color = Colors.grey;
+        label = 'Indisponible';
     }
 
     return Chip(
@@ -353,7 +356,7 @@ class _DashboardTab extends StatelessWidget {
         label,
         style: TextStyle(color: color, fontSize: 12),
       ),
-      backgroundColor: color.withOpacity(0.1),
+      backgroundColor: color.withValues(alpha:0.1),
       side: BorderSide.none,
       padding: EdgeInsets.zero,
     );
@@ -388,7 +391,7 @@ class _DashboardTab extends StatelessWidget {
                         width: 30,
                         height: heights[index],
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.7),
+                          color: AppTheme.lightTheme.primaryColor.withValues(alpha:0.7),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -548,7 +551,7 @@ class _ActivityItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: color.withOpacity(0.1),
+        backgroundColor: color.withValues(alpha:0.1),
         child: Icon(icon, color: color, size: 20),
       ),
       title: Text(title),
@@ -618,7 +621,7 @@ class MyFacilitiesScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Consumer<FacilityProvider>(
+      body: Consumer<AppFacilityProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -754,7 +757,7 @@ class MyFacilitiesScreen extends StatelessWidget {
                                   '${facility.hourlyRate.toStringAsFixed(0)}€/h',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryColor,
+                                    color: AppTheme.lightTheme.primaryColor,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -803,7 +806,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha:0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

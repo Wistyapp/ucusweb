@@ -1,4 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
 class PaymentService {
@@ -40,12 +41,9 @@ class PaymentService {
           paymentIntentClientSecret: clientSecret,
           customerId: customerId,
           customerEphemeralKeySecret: ephemeralKey,
-          merchantDisplayName: 'UnCoachUneSalle',
+          merchantDisplayName: 'Un Coach Une Salle Test',
           style: ThemeMode.system,
-          appearance: const PaymentSheetAppearance(
-            colors: PaymentSheetAppearanceColors(
-              primary: Color(0xFF2563EB),
-            ),
+          appearance: PaymentSheetAppearance(
             shapes: PaymentSheetShape(
               borderRadius: 12,
             ),

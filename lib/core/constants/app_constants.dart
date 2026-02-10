@@ -54,6 +54,26 @@ class AppConstants {
   static const int maxBookingsPerDay = 5;
   static const int maxMessagesPerDay = 50;
   static const int maxReviewsPerMonth = 10;
+
+  /// Liste des équipements disponibles (version simplifiée pour les formulaires)
+  static const List<String> availableAmenities = [
+    'Parking',
+    'WiFi',
+    'Douches',
+    'Vestiaires',
+    'Casiers',
+    'Climatisation',
+    'Chauffage',
+    'Système audio',
+    'Miroirs',
+    'Tapis de sol',
+    'Poids libres',
+    'Machines cardio',
+    'Accès handicapé',
+    'Fontaine à eau',
+    'Serviettes',
+    'Premiers secours',
+  ];
 }
 
 class FirestoreCollections {
@@ -91,6 +111,7 @@ class BookingStatus {
   static const String completed = 'completed';
   static const String cancelled = 'cancelled';
 }
+
 
 class PaymentStatus {
   static const String pending = 'pending';
@@ -170,6 +191,9 @@ class AppUserTypes {
 
 
 /// Liste des équipements disponibles
+///
+
+
 class Amenities {
   static const List<Map<String, dynamic>> all = [
     {'id': 'parking', 'name': 'Parking', 'icon': Icons.local_parking},

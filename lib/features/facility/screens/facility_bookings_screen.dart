@@ -31,8 +31,8 @@ class _FacilityBookingsScreenState extends State<FacilityBookingsScreen>
   }
 
   Future<void> _loadBookings() async {
-    final authProvider = context.read<AuthProvider>();
-    final bookingProvider = context.read<BookingProvider>();
+    final authProvider = context.read<AppAuthProvider>();
+    final bookingProvider = context.read<AppBookingProvider>();
     
     if (authProvider.user != null) {
       await bookingProvider.loadFacilityOwnerBookings(authProvider.user!.uid);
@@ -54,7 +54,7 @@ class _FacilityBookingsScreenState extends State<FacilityBookingsScreen>
           ],
         ),
       ),
-      body: Consumer<BookingProvider>(
+      body: Consumer<AppBookingProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -107,7 +107,7 @@ class _FacilityBookingsScreenState extends State<FacilityBookingsScreen>
 }
 
 class _BookingsList extends StatelessWidget {
-  final List<Booking> bookings;
+  final List<BookingModel> bookings;
   final String emptyMessage;
   final IconData emptyIcon;
   final bool showActions;
@@ -142,8 +142,8 @@ class _BookingsList extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: () async {
-        final authProvider = context.read<AuthProvider>();
-        final bookingProvider = context.read<BookingProvider>();
+        final authProvider = context.read<AppAuthProvider>();
+        final bookingProvider = context.read<AppBookingProvider>();
         
         if (authProvider.user != null) {
           await bookingProvider.loadFacilityOwnerBookings(authProvider.user!.uid);
@@ -165,7 +165,7 @@ class _BookingsList extends StatelessWidget {
 }
 
 class _BookingCard extends StatelessWidget {
-  final Booking booking;
+  final BookingModel booking;
   final bool showActions;
 
   const _BookingCard({
@@ -196,10 +196,10 @@ class _BookingCard extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                        backgroundColor: AppTheme.lightTheme.primaryColor.withValues(alpha:0.1),
                         child: Icon(
                           Icons.fitness_center,
-                          color: AppTheme.primaryColor,
+                          color: AppTheme.lightTheme.primaryColor,
                           size: 20,
                         ),
                       ),
@@ -262,7 +262,7 @@ class _BookingCard extends StatelessWidget {
                       icon: Icons.euro,
                       label: 'Montant',
                       value: '${booking.totalPrice.toStringAsFixed(0)}€',
-                      valueColor: AppTheme.primaryColor,
+                      valueColor: AppTheme.lightTheme.primaryColor,
                     ),
                   ),
                 ],
@@ -331,7 +331,7 @@ class _BookingCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusChip(BookingStatus status) {
+  Widget _buildStatusChip(String status) {
     Color color;
     String label;
     IconData icon;
@@ -362,12 +362,16 @@ class _BookingCard extends StatelessWidget {
         label = 'Annulée';
         icon = Icons.cancel;
         break;
+        default:
+        color = Colors.grey;
+        label = 'indisponible';
+        icon = Icons.help;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha:0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -401,7 +405,7 @@ class _BookingCard extends StatelessWidget {
            '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}';
   }
 
-  void _showDeclineDialog(BuildContext context, Booking booking) {
+  void _showDeclineDialog(BuildContext context, BookingModel booking) {
     final reasonController = TextEditingController();
     
     showDialog(
@@ -433,12 +437,13 @@ class _BookingCard extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              final bookingProvider = context.read<BookingProvider>();
+              final bookingProvider = context.read<AppBookingProvider>();
               await bookingProvider.cancelBooking(
-                booking.id,
+                bookingId: booking.id,
                 reason: reasonController.text.isNotEmpty 
                     ? reasonController.text 
                     : 'Refusé par le propriétaire',
+                cancelledBy: context.read<AppAuthProvider>().user!.displayName ?? 'indisponible',
               );
               if (context.mounted) {
                 Navigator.pop(context);
@@ -458,8 +463,8 @@ class _BookingCard extends StatelessWidget {
     );
   }
 
-  void _confirmBooking(BuildContext context, Booking booking) async {
-    final bookingProvider = context.read<BookingProvider>();
+  void _confirmBooking(BuildContext context, BookingModel booking) async {
+    final bookingProvider = context.read<AppBookingProvider>();
     
     try {
       await bookingProvider.confirmBooking(booking.id);

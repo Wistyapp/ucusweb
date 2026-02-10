@@ -25,8 +25,8 @@ class _MyFacilitiesScreenState extends State<MyFacilitiesScreen> {
   }
 
   Future<void> _loadFacilities() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
+    final authProvider = Provider.of<AppAuthProvider>(context, listen: false);
+    final facilityProvider = Provider.of<AppFacilityProvider>(context, listen: false);
     
     if (authProvider.user != null) {
       await facilityProvider.loadOwnerFacilities(authProvider.user!.uid);
@@ -46,7 +46,7 @@ class _MyFacilitiesScreenState extends State<MyFacilitiesScreen> {
           ),
         ],
       ),
-      body: Consumer<FacilityProvider>(
+      body: Consumer<AppFacilityProvider>(
         builder: (context, facilityProvider, _) {
           if (facilityProvider.isLoading) {
             return const LoadingIndicator(message: 'Chargement de vos salles...');
@@ -56,9 +56,9 @@ class _MyFacilitiesScreenState extends State<MyFacilitiesScreen> {
             return EmptyStateWidget(
               icon: Icons.business_outlined,
               title: 'Aucune salle',
-              message: 'Vous n\'avez pas encore ajouté de salle.\nCommencez dès maintenant !',
-              actionLabel: 'Ajouter une salle',
-              onAction: () => Navigator.pushNamed(context, AppRouter.createFacility),
+              description: 'Vous n\'avez pas encore ajouté de salle.\nCommencez dès maintenant !',
+              buttonText: 'Ajouter une salle',
+              onButtonPressed: () => Navigator.pushNamed(context, AppRouter.createFacility),
             );
           }
 
@@ -86,7 +86,7 @@ class _MyFacilitiesScreenState extends State<MyFacilitiesScreen> {
     );
   }
 
-  void _showFacilityOptions(BuildContext context, Facility facility) {
+  void _showFacilityOptions(BuildContext context, FacilityModel facility) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -98,7 +98,7 @@ class _MyFacilitiesScreenState extends State<MyFacilitiesScreen> {
 }
 
 class _FacilityCard extends StatelessWidget {
-  final Facility facility;
+  final FacilityModel facility;
   final VoidCallback onTap;
 
   const _FacilityCard({
@@ -179,7 +179,7 @@ class _FacilityCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor,
+                          color: AppTheme.lightTheme.primaryColor,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Row(
@@ -224,7 +224,7 @@ class _FacilityCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          facility.address.formattedAddress,
+                          facility.address.city,
                           style: TextStyle(color: Colors.grey[600], fontSize: 14),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -247,7 +247,7 @@ class _FacilityCard extends StatelessWidget {
                         icon: Icons.calendar_today,
                         value: '${facility.totalBookings}',
                         label: 'réservations',
-                        color: AppTheme.primaryColor,
+                        color: AppTheme.lightTheme.primaryColor,
                       ),
                       const Spacer(),
                       Text(
@@ -255,7 +255,7 @@ class _FacilityCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
+                          color: AppTheme.lightTheme.primaryColor,
                         ),
                       ),
                     ],
@@ -304,7 +304,7 @@ class _StatItem extends StatelessWidget {
 }
 
 class _FacilityOptionsSheet extends StatelessWidget {
-  final Facility facility;
+  final FacilityModel facility;
 
   const _FacilityOptionsSheet({required this.facility});
 
@@ -341,7 +341,7 @@ class _FacilityOptionsSheet extends StatelessWidget {
           const Divider(height: 1),
           // Options
           ListTile(
-            leading: const Icon(Icons.edit, color: AppTheme.primaryColor),
+            leading:  Icon(Icons.edit, color: AppTheme.lightTheme.primaryColor),
             title: const Text('Modifier la salle'),
             onTap: () {
               Navigator.pop(context);
@@ -399,7 +399,7 @@ class _FacilityOptionsSheet extends StatelessWidget {
             title: Text(facility.isActive ? 'Désactiver la salle' : 'Activer la salle'),
             onTap: () async {
               Navigator.pop(context);
-              final facilityProvider = Provider.of<FacilityProvider>(
+              final facilityProvider = Provider.of<AppFacilityProvider>(
                 context,
                 listen: false,
               );
@@ -448,7 +448,7 @@ class _FacilityOptionsSheet extends StatelessWidget {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Close bottom sheet
               
-              final facilityProvider = Provider.of<FacilityProvider>(
+              final facilityProvider = Provider.of<AppFacilityProvider>(
                 context,
                 listen: false,
               );
