@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +10,8 @@ import 'core/providers/app_message_provider.dart';
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
+import 'firebase_options.dart';
 
 // Firebase (décommenter quand prêt)
 // import 'package:firebase_core/firebase_core.dart';
@@ -24,8 +27,12 @@ void main() async {
   // Load environment variables
   // await dotenv.load(fileName: ".env");
 
+
+
   // Initialize Firebase
-  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,  // ← décommenter
+  );
 
   runApp(const UnCoachUneSalleApp());
 }
