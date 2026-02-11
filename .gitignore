@@ -21,6 +21,27 @@ coverage/
 *.pbenum.dart
 *.pbjson.dart
 
+
+
+# ============================================
+# FIREBASE
+# ============================================
+.firebaserc
+firebase-debug.log
+firebase-debug.*.log
+firebase-functions-debug.log
+**/functions/lib/
+**/functions/.runtimeconfig.json
+
+# Firebase configuration (contains API keys)
+lib/firebase_options.dart
+**/firebase_options.dart
+
+# Google Services files (contiennent des clés)
+**/android/app/google-services.json
+**/ios/Runner/GoogleService-Info.plist
+**/ios/firebase_app_id_file.json
+
 # ============================================
 # IDE & EDITOR
 # ============================================
