@@ -1,0 +1,210 @@
+Architecture Firestore - UnCoachUneSalle
+
+🔥 Firestore Database
+│
+├── 📁 users (Collection)
+│   └── 📄 {userId} (Document)
+│       ├── uid: string
+│       ├── email: string
+│       ├── displayName: string
+│       ├── type: "coach" | "facility"
+│       ├── phoneNumber: string
+│       ├── profileImage: string?
+│       ├── profileImageStoragePath: string?
+│       ├── isActive: boolean
+│       ├── fcmToken: string?
+│       ├── createdAt: timestamp
+│       ├── updatedAt: timestamp
+│       ├── lastLoginAt: timestamp?
+│       ├── verification: {
+│       │     identity: boolean,
+│       │     identityVerifiedAt: timestamp?,
+│       │     insurance: boolean,
+│       │     insuranceVerifiedAt: timestamp?,
+│       │     license: boolean,
+│       │     licenseVerifiedAt: timestamp?,
+│       │     backgroundCheck: boolean,
+│       │     backgroundCheckAt: timestamp?
+│       │   }
+│       ├── notificationPreferences: {
+│       │     emailNotifications: boolean,
+│       │     smsNotifications: boolean,
+│       │     pushNotifications: boolean,
+│       │     bookingUpdates: boolean,
+│       │     newMessages: boolean,
+│       │     reviews: boolean
+│       │   }
+│       │
+│       ├── 📁 coachProfiles (Sous-collection) ← si type == "coach"
+│       │   └── 📄 {profileId}
+│       │
+│       └── 📁 facilityProfiles (Sous-collection) ← si type == "facility"
+│           └── 📄 {profileId}
+│
+├── 📁 facilities (Collection)
+│   └── 📄 {facilityId} (Document)
+│       ├── ownerId: string (→ users/{userId})
+│       ├── name: string
+│       ├── description: string
+│       ├── address: {
+│       │     street, city, postalCode, country, lat, lng
+│       │   }
+│       ├── images: string[]
+│       ├── amenities: { [key]: boolean }
+│       ├── capacity: number
+│       ├── hourlyRate: number
+│       ├── peakHourRate: number?
+│       ├── peakHours: {
+│       │     startTime, endTime, daysOfWeek, multiplier
+│       │   }
+│       ├── rating: number
+│       ├── reviewsCount: number
+│       ├── totalBookings: number
+│       ├── isActive: boolean
+│       ├── isVerified: boolean
+│       ├── isFeatured: boolean
+│       ├── facilityType: string?
+│       ├── createdAt: timestamp
+│       ├── updatedAt: timestamp
+│       │
+│       ├── 📁 spaces (Sous-collection)
+│       │   └── 📄 {spaceId}
+│       │       ├── facilityId: string
+│       │       ├── name: string
+│       │       ├── description: string
+│       │       ├── capacity: number
+│       │       ├── images: string[]
+│       │       ├── equipment: string[]
+│       │       ├── hourlyRate: number
+│       │       ├── area: number
+│       │       ├── isAccessible: boolean
+│       │       ├── hasParking: boolean
+│       │       ├── hasShowers: boolean
+│       │       ├── isAvailable: boolean
+│       │       └── ...
+│       │
+│       └── 📁 availability (Sous-collection)
+│           └── 📄 {availabilityId}
+│
+├── 📁 bookings (Collection)
+│   └── 📄 {bookingId} (Document)
+│       ├── coachId: string (→ users/{userId})
+│       ├── facilityId: string (→ facilities/{facilityId})
+│       ├── spaceId: string
+│       ├── facilityOwnerId: string (→ users/{userId})
+│       ├── conversationId: string (→ messages/{conversationId})
+│       ├── startTime: timestamp
+│       ├── endTime: timestamp
+│       ├── durationHours: number
+│       ├── status: "pending" | "confirmed" | "in_progress" | "completed" | "cancelled"
+│       ├── totalPrice: number
+│       ├── subtotal: number
+│       ├── platformCommission: number
+│       ├── platformCommissionPercentage: number
+│       ├── paymentStatus: "pending" | "completed" | "refunded"
+│       ├── paymentMethod: string?
+│       ├── stripePaymentIntentId: string?
+│       ├── notes: string?
+│       ├── cancellationReason: string?
+│       ├── hasReview: boolean
+│       ├── createdAt: timestamp
+│       ├── confirmedAt: timestamp?
+│       ├── completedAt: timestamp?
+│       │
+│       │ // Données dénormalisées (pour affichage rapide)
+│       ├── facilityName: string?
+│       ├── facilityAddress: string?
+│       ├── facilityImage: string?
+│       ├── spaceName: string?
+│       ├── coachName: string?
+│       └── coachImage: string?
+│
+├── 📁 reviews (Collection)
+│   └── 📄 {reviewId} (Document)
+│       ├── reviewerId: string (→ users/{userId})
+│       ├── revieweeId: string (→ users/{userId})
+│       ├── bookingId: string (→ bookings/{bookingId})
+│       ├── reviewType: "coach_to_facility" | "facility_to_coach"
+│       ├── overallRating: number (1-5)
+│       ├── comment: string
+│       ├── categories: {
+│       │     // Si coach_to_facility:
+│       │     cleanliness, equipmentQuality, accessibility, atmosphereQuality, valueForMoney
+│       │     // Si facility_to_coach:
+│       │     professionalism, punctuality, respectOfRules, communication, clientBehavior
+│       │   }
+│       ├── photos: string[]
+│       ├── isVerified: boolean
+│       ├── isHidden: boolean
+│       ├── createdAt: timestamp
+│       │
+│       │ // Données dénormalisées
+│       ├── reviewerName: string?
+│       ├── reviewerImage: string?
+│       └── facilityName: string?
+│
+├── 📁 messages (Collection) ← Conversations
+│   └── 📄 {conversationId} (Document)
+│       ├── participants: string[] (2 userIds)
+│       ├── lastMessage: string
+│       ├── lastMessageTime: timestamp
+│       ├── lastMessageSenderId: string
+│       ├── unreadCount: { [userId]: number }
+│       ├── createdAt: timestamp
+│       ├── participantsInfo: {
+│       │     [userId]: { displayName, profileImage, userType }
+│       │   }
+│       │
+│       └── 📁 messages (Sous-collection)
+│           └── 📄 {messageId}
+│               ├── conversationId: string
+│               ├── senderId: string
+│               ├── senderName: string
+│               ├── senderProfileImage: string?
+│               ├── text: string
+│               ├── attachments: [{
+│               │     type, url, storagePath, fileName, fileSize
+│               │   }]
+│               ├── isRead: boolean
+│               ├── readAt: timestamp?
+│               └── createdAt: timestamp
+│
+├── 📁 payments (Collection) ← Géré par Cloud Functions
+│   └── 📄 {paymentId}
+│
+├── 📁 notifications (Collection) ← Géré par Cloud Functions
+│   └── 📄 {notificationId}
+│       ├── userId: string
+│       ├── isRead: boolean
+│       ├── readAt: timestamp?
+│       └── ...
+│
+└── 📁 analytics (Collection) ← Géré par Cloud Functions
+    └── 📄 {analyticsId}
+
+
+Relations entre les collections
+
+┌─────────────┐         ┌──────────────┐         ┌─────────────┐
+│   USERS     │────────▶│  FACILITIES  │◀────────│  BOOKINGS   │
+│  (Coach)    │         │              │         │             │
+└─────────────┘         └──────────────┘         └─────────────┘
+      │                        │                       │
+      │                        │                       │
+      ▼                        ▼                       ▼
+┌─────────────┐         ┌──────────────┐         ┌─────────────┐
+│   USERS     │         │   SPACES     │         │  REVIEWS    │
+│ (Facility)  │         │ (sous-coll)  │         │             │
+└─────────────┘         └──────────────┘         └─────────────┘
+      │                                                │
+      │                                                │
+      └────────────────────┬───────────────────────────┘
+                           ▼
+                    ┌─────────────┐
+                    │  MESSAGES   │
+                    │(Conversations)
+                    └─────────────┘
+
+C'est une architecture solide et bien pensée !
+Les données dénormalisées dans bookings et reviews permettent d'éviter
+des lectures supplémentaires pour l'affichage.

@@ -223,11 +223,13 @@ service cloud.firestore {
     // AVAILABILITY COLLECTION
     // =============================================
     match /availability/{availabilityId} {
-      // Anyone authenticated can read availability
       allow read: if isAuthenticated();
 
-      // Only facility owner can write availability
-      allow write: if isAuthenticated() &&
+      // Pour create, resource.data nexiste pas encore, utilise request.resource.data
+      allow create: if isAuthenticated() &&
+                   get(/databases/$(database)/documents/facilities/$(request.resource.data.facilityId)).data.ownerId == request.auth.uid;
+
+      allow update, delete: if isAuthenticated() &&
                    get(/databases/$(database)/documents/facilities/$(resource.data.facilityId)).data.ownerId == request.auth.uid;
     }
 
