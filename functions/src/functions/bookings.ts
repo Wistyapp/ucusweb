@@ -1,24 +1,43 @@
 /**
  * Booking Functions
+
+
+ BETA:    pending → confirmed → in_progress → completed
+                  ↘ cancelled
+
+ V1:      pending → (payment) → confirmed → in_progress → completed
+                             ↘ cancelled
+
+ */
+
+/**
+ * Booking Functions
+ *
+ * BETA VERSION - Sans système de paiement
+ * Les fonctions de paiement sont commentées pour la V1
  */
 
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as Joi from 'joi';
-import { Decimal } from 'decimal.js';
+// V1: Décommenter pour les calculs de prix
+// import { Decimal } from 'decimal.js';
 import {
   COLLECTIONS,
-  PLATFORM_COMMISSION_RATE,
+  // V1: Décommenter pour les paiements
+  // PLATFORM_COMMISSION_RATE,
   BOOKING_MIN_ADVANCE_HOURS,
   BOOKING_MAX_ADVANCE_DAYS,
   BOOKING_MIN_DURATION_HOURS,
   BOOKING_MAX_DURATION_HOURS,
   BOOKING_MAX_PER_DAY,
   BOOKING_MAX_PENDING,
-  MIN_BOOKING_PRICE,
-  MAX_BOOKING_PRICE,
+  // V1: Décommenter pour les paiements
+  // MIN_BOOKING_PRICE,
+  // MAX_BOOKING_PRICE,
   BOOKING_STATUS,
-  PAYMENT_STATUS,
+  // V1: Décommenter pour les paiements
+  // PAYMENT_STATUS,
   CANCELLATION_FULL_REFUND_HOURS,
   CANCELLATION_PARTIAL_REFUND_HOURS,
   CANCELLATION_PARTIAL_REFUND_RATE,
@@ -26,7 +45,10 @@ import {
 
 const db = admin.firestore();
 
-// Validation schemas
+// =============================================
+// VALIDATION SCHEMAS
+// =============================================
+
 const createBookingSchema = Joi.object({
   facilityId: Joi.string().required(),
   spaceId: Joi.string().optional(),
@@ -40,8 +62,23 @@ const cancelBookingSchema = Joi.object({
   reason: Joi.string().max(500).optional(),
 });
 
+const updateBookingStatusSchema = Joi.object({
+  bookingId: Joi.string().required(),
+  status: Joi.string().valid(
+    BOOKING_STATUS.CONFIRMED,
+    BOOKING_STATUS.CANCELLED
+  ).required(),
+  reason: Joi.string().max(500).optional(),
+});
+
+// =============================================
+// BETA FUNCTIONS - Actives
+// =============================================
+
 /**
- * Create a new booking
+ * Create a new booking (BETA - sans paiement)
+ *
+ * Flow Beta: Coach crée une réservation → Facility owner confirme/refuse
  */
 export const createBooking = functions.region('europe-west1').https.onCall(
   async (data, context) => {
@@ -57,6 +94,20 @@ export const createBooking = functions.region('europe-west1').https.onCall(
 
     const { facilityId, spaceId, startTime, endTime, notes } = value;
     const coachId = context.auth.uid;
+
+    // Verify user is a coach
+    const userDoc = await db.collection(COLLECTIONS.USERS).doc(coachId).get();
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Utilisateur non trouvé');
+    }
+
+    const userData = userDoc.data()!;
+    if (userData.type !== 'coach') {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Seuls les coachs peuvent effectuer des réservations'
+      );
+    }
 
     // Convert timestamps
     const startDate = new Date(startTime);
@@ -115,7 +166,7 @@ export const createBooking = functions.region('europe-west1').https.onCall(
     if (pendingBookings.size >= BOOKING_MAX_PENDING) {
       throw new functions.https.HttpsError(
         'failed-precondition',
-        'Vous avez trop de réservations en attente de paiement'
+        'Vous avez trop de réservations en attente'
       );
     }
 
@@ -159,7 +210,443 @@ export const createBooking = functions.region('europe-west1').https.onCall(
       );
     }
 
-    // Calculate price
+    // BETA: Prix indicatif (sans paiement réel)
+    const hourlyRate = facility.hourlyRate || 0;
+    const estimatedPrice = hourlyRate * durationHours;
+
+    // Create booking document
+    const bookingRef = db.collection(COLLECTIONS.BOOKINGS).doc();
+    const bookingId = bookingRef.id;
+
+    const bookingData = {
+      id: bookingId,
+      coachId,
+      coachName: userData.displayName || null,
+      coachImage: userData.profileImage || null,
+      facilityId,
+      spaceId: spaceId || null,
+      facilityOwnerId: facility.ownerId,
+      facilityName: facility.name,
+      facilityImage: facility.images?.[0] || null,
+      facilityAddress: facility.address?.formattedAddress || null,
+      startTime: admin.firestore.Timestamp.fromDate(startDate),
+      endTime: admin.firestore.Timestamp.fromDate(endDate),
+      durationHours,
+      status: BOOKING_STATUS.PENDING,
+
+      // BETA: Prix indicatif seulement
+      estimatedPrice,
+      hourlyRate,
+
+      // V1: Champs de paiement (désactivés pour la Beta)
+      // totalPrice: null,
+      // subtotal: null,
+      // platformCommission: null,
+      // platformCommissionPercentage: null,
+      // paymentStatus: PAYMENT_STATUS.PENDING,
+      // paymentMethod: null,
+      // stripePaymentIntentId: null,
+      // refundAmount: null,
+      // refundReason: null,
+      // refundDate: null,
+
+      notes: notes || null,
+      cancellationReason: null,
+      cancellationInitiatedBy: null,
+      cancelledAt: null,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      confirmedAt: null,
+      completedAt: null,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      hasReview: false,
+      reviewDeadline: null,
+      reminderSentAt: null,
+    };
+
+    await bookingRef.set(bookingData);
+
+    return {
+      success: true,
+      bookingId,
+      estimatedPrice,
+      startTime: startDate.toISOString(),
+      endTime: endDate.toISOString(),
+      durationHours,
+      status: BOOKING_STATUS.PENDING,
+      message: 'Demande de réservation envoyée. En attente de confirmation du propriétaire.',
+    };
+  }
+);
+
+/**
+ * Confirm or reject a booking (BETA - Facility owner action)
+ */
+export const updateBookingStatus = functions.region('europe-west1').https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Authentification requise');
+    }
+
+    const { error, value } = updateBookingStatusSchema.validate(data);
+    if (error) {
+      throw new functions.https.HttpsError('invalid-argument', error.details[0].message);
+    }
+
+    const { bookingId, status, reason } = value;
+    const userId = context.auth.uid;
+
+    const bookingRef = db.collection(COLLECTIONS.BOOKINGS).doc(bookingId);
+    const bookingDoc = await bookingRef.get();
+
+    if (!bookingDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Réservation non trouvée');
+    }
+
+    const booking = bookingDoc.data()!;
+
+    // Verify user is facility owner
+    if (userId !== booking.facilityOwnerId) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Seul le propriétaire de la salle peut modifier cette réservation'
+      );
+    }
+
+    // Verify booking is pending
+    if (booking.status !== BOOKING_STATUS.PENDING) {
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        'Cette réservation ne peut plus être modifiée'
+      );
+    }
+
+    // Verify booking hasn't expired (start time not passed)
+    const startTime = booking.startTime.toDate();
+    if (startTime < new Date()) {
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        'Cette réservation a expiré'
+      );
+    }
+
+    const updateData: Record<string, unknown> = {
+      status,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    if (status === BOOKING_STATUS.CONFIRMED) {
+      updateData.confirmedAt = admin.firestore.FieldValue.serverTimestamp();
+
+      // Update facility stats
+      await db.collection(COLLECTIONS.FACILITIES).doc(booking.facilityId).update({
+        totalBookings: admin.firestore.FieldValue.increment(1),
+      });
+    }
+
+    if (status === BOOKING_STATUS.CANCELLED) {
+      updateData.cancellationReason = reason || 'Refusé par le propriétaire';
+      updateData.cancellationInitiatedBy = 'facility';
+      updateData.cancelledAt = admin.firestore.FieldValue.serverTimestamp();
+    }
+
+    await bookingRef.update(updateData);
+
+    return {
+      success: true,
+      status,
+      message: status === BOOKING_STATUS.CONFIRMED
+        ? 'Réservation confirmée'
+        : 'Réservation refusée',
+    };
+  }
+);
+
+/**
+ * Cancel a booking (BETA - Coach or Facility owner)
+ */
+export const cancelBooking = functions.region('europe-west1').https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Authentification requise');
+    }
+
+    const { error, value } = cancelBookingSchema.validate(data);
+    if (error) {
+      throw new functions.https.HttpsError('invalid-argument', error.details[0].message);
+    }
+
+    const { bookingId, reason } = value;
+    const userId = context.auth.uid;
+
+    const bookingRef = db.collection(COLLECTIONS.BOOKINGS).doc(bookingId);
+    const bookingDoc = await bookingRef.get();
+
+    if (!bookingDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Réservation non trouvée');
+    }
+
+    const booking = bookingDoc.data()!;
+
+    // Verify user can cancel (coach or facility owner)
+    const isCoach = userId === booking.coachId;
+    const isFacilityOwner = userId === booking.facilityOwnerId;
+
+    if (!isCoach && !isFacilityOwner) {
+      throw new functions.https.HttpsError('permission-denied', 'Action non autorisée');
+    }
+
+    // Verify booking can be cancelled
+    if (![BOOKING_STATUS.PENDING, BOOKING_STATUS.CONFIRMED].includes(booking.status)) {
+      throw new functions.https.HttpsError(
+        'failed-precondition',
+        'Cette réservation ne peut pas être annulée'
+      );
+    }
+
+    // BETA: Calculate theoretical refund rate (for display purposes only)
+    const startTime = booking.startTime.toDate();
+    const hoursUntilStart = (startTime.getTime() - Date.now()) / (1000 * 60 * 60);
+
+    let refundRate = 0;
+    let refundMessage = '';
+
+    if (hoursUntilStart > CANCELLATION_FULL_REFUND_HOURS) {
+      refundRate = 1;
+      refundMessage = 'Annulation gratuite (plus de 48h avant)';
+    } else if (hoursUntilStart > CANCELLATION_PARTIAL_REFUND_HOURS) {
+      refundRate = CANCELLATION_PARTIAL_REFUND_RATE;
+      refundMessage = 'Annulation avec frais (25% retenus)';
+    } else {
+      refundRate = 0;
+      refundMessage = 'Annulation tardive (moins de 24h avant)';
+    }
+
+    // Update booking
+    await bookingRef.update({
+      status: BOOKING_STATUS.CANCELLED,
+      cancellationReason: reason || null,
+      cancellationInitiatedBy: isCoach ? 'coach' : 'facility',
+      cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      // BETA: Info indicative seulement
+      theoreticalRefundRate: refundRate,
+    });
+
+    return {
+      success: true,
+      message: 'Réservation annulée',
+      refundInfo: refundMessage,
+      cancelledBy: isCoach ? 'coach' : 'facility',
+    };
+  }
+);
+
+/**
+ * Get user's bookings with filters
+ */
+export const getUserBookings = functions.region('europe-west1').https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Authentification requise');
+    }
+
+    const { status, filter, limit = 20, startAfter } = data;
+    const userId = context.auth.uid;
+
+    // Get user type
+    const userDoc = await db.collection(COLLECTIONS.USERS).doc(userId).get();
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Utilisateur non trouvé');
+    }
+
+    const userType = userDoc.data()!.type;
+    const filterField = userType === 'coach' ? 'coachId' : 'facilityOwnerId';
+
+    let query = db.collection(COLLECTIONS.BOOKINGS)
+      .where(filterField, '==', userId)
+      .orderBy('startTime', 'desc')
+      .limit(limit);
+
+    // Filter by status
+    if (status) {
+      query = query.where('status', '==', status);
+    }
+
+    // Filter by time (upcoming / past)
+    if (filter === 'upcoming') {
+      query = query.where('startTime', '>=', admin.firestore.Timestamp.now());
+    } else if (filter === 'past') {
+      query = query.where('startTime', '<', admin.firestore.Timestamp.now());
+    }
+
+    // Pagination
+    if (startAfter) {
+      const startAfterDoc = await db.collection(COLLECTIONS.BOOKINGS).doc(startAfter).get();
+      if (startAfterDoc.exists) {
+        query = query.startAfter(startAfterDoc);
+      }
+    }
+
+    const snapshot = await query.get();
+
+    const bookings = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        startTime: data.startTime?.toDate().toISOString(),
+        endTime: data.endTime?.toDate().toISOString(),
+        createdAt: data.createdAt?.toDate().toISOString(),
+        confirmedAt: data.confirmedAt?.toDate().toISOString() || null,
+        cancelledAt: data.cancelledAt?.toDate().toISOString() || null,
+        completedAt: data.completedAt?.toDate().toISOString() || null,
+      };
+    });
+
+    return {
+      success: true,
+      bookings,
+      count: bookings.length,
+      hasMore: snapshot.docs.length === limit,
+    };
+  }
+);
+
+/**
+ * Get a single booking by ID
+ */
+export const getBooking = functions.region('europe-west1').https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Authentification requise');
+    }
+
+    const { bookingId } = data;
+    if (!bookingId) {
+      throw new functions.https.HttpsError('invalid-argument', 'ID de réservation requis');
+    }
+
+    const userId = context.auth.uid;
+
+    const bookingDoc = await db.collection(COLLECTIONS.BOOKINGS).doc(bookingId).get();
+    if (!bookingDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Réservation non trouvée');
+    }
+
+    const booking = bookingDoc.data()!;
+
+    // Verify user has access to this booking
+    if (booking.coachId !== userId && booking.facilityOwnerId !== userId) {
+      throw new functions.https.HttpsError('permission-denied', 'Accès non autorisé');
+    }
+
+    return {
+      success: true,
+      booking: {
+        id: bookingDoc.id,
+        ...booking,
+        startTime: booking.startTime?.toDate().toISOString(),
+        endTime: booking.endTime?.toDate().toISOString(),
+        createdAt: booking.createdAt?.toDate().toISOString(),
+        confirmedAt: booking.confirmedAt?.toDate().toISOString() || null,
+        cancelledAt: booking.cancelledAt?.toDate().toISOString() || null,
+        completedAt: booking.completedAt?.toDate().toISOString() || null,
+      },
+    };
+  }
+);
+
+/**
+ * Get booking statistics for a user
+ */
+export const getBookingStats = functions.region('europe-west1').https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Authentification requise');
+    }
+
+    const userId = context.auth.uid;
+
+    // Get user type
+    const userDoc = await db.collection(COLLECTIONS.USERS).doc(userId).get();
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError('not-found', 'Utilisateur non trouvé');
+    }
+
+    const userType = userDoc.data()!.type;
+    const filterField = userType === 'coach' ? 'coachId' : 'facilityOwnerId';
+
+    // Get counts for each status
+    const [pending, confirmed, completed, cancelled] = await Promise.all([
+      db.collection(COLLECTIONS.BOOKINGS)
+        .where(filterField, '==', userId)
+        .where('status', '==', BOOKING_STATUS.PENDING)
+        .count().get(),
+      db.collection(COLLECTIONS.BOOKINGS)
+        .where(filterField, '==', userId)
+        .where('status', '==', BOOKING_STATUS.CONFIRMED)
+        .count().get(),
+      db.collection(COLLECTIONS.BOOKINGS)
+        .where(filterField, '==', userId)
+        .where('status', '==', BOOKING_STATUS.COMPLETED)
+        .count().get(),
+      db.collection(COLLECTIONS.BOOKINGS)
+        .where(filterField, '==', userId)
+        .where('status', '==', BOOKING_STATUS.CANCELLED)
+        .count().get(),
+    ]);
+
+    // Get upcoming bookings count
+    const upcoming = await db.collection(COLLECTIONS.BOOKINGS)
+      .where(filterField, '==', userId)
+      .where('status', '==', BOOKING_STATUS.CONFIRMED)
+      .where('startTime', '>=', admin.firestore.Timestamp.now())
+      .count().get();
+
+    return {
+      success: true,
+      stats: {
+        pending: pending.data().count,
+        confirmed: confirmed.data().count,
+        completed: completed.data().count,
+        cancelled: cancelled.data().count,
+        upcoming: upcoming.data().count,
+        total: pending.data().count + confirmed.data().count + completed.data().count + cancelled.data().count,
+      },
+    };
+  }
+);
+
+
+// =============================================
+// V1 FUNCTIONS - Commentées pour la Beta
+// =============================================
+
+/*
+// V1: Décommenter quand le système de paiement sera activé
+
+import { Decimal } from 'decimal.js';
+import {
+  PLATFORM_COMMISSION_RATE,
+  MIN_BOOKING_PRICE,
+  MAX_BOOKING_PRICE,
+  PAYMENT_STATUS,
+} from '../config/constants';
+
+/**
+ * Create a new booking with payment (V1)
+ *
+ * Flow V1: Coach crée une réservation → Paiement Stripe → Confirmation auto
+ *
+export const createBookingWithPayment = functions.region('europe-west1').https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'Authentification requise');
+    }
+
+    // ... validation code (same as Beta) ...
+
+    // Calculate price with Decimal.js for precision
     const hourlyRate = new Decimal(facility.hourlyRate);
     const subtotal = hourlyRate.times(durationHours);
     const platformCommission = subtotal.times(PLATFORM_COMMISSION_RATE);
@@ -180,23 +667,8 @@ export const createBooking = functions.region('europe-west1').https.onCall(
       );
     }
 
-    // Create booking document
-    const bookingRef = db.collection(COLLECTIONS.BOOKINGS).doc();
-    const bookingId = bookingRef.id;
-
     const bookingData = {
-      id: bookingId,
-      coachId,
-      facilityId,
-      spaceId: spaceId || null,
-      facilityOwnerId: facility.ownerId,
-      facilityName: facility.name,
-      facilityImage: facility.images?.[0] || null,
-      facilityAddress: facility.address?.formattedAddress || null,
-      startTime: admin.firestore.Timestamp.fromDate(startDate),
-      endTime: admin.firestore.Timestamp.fromDate(endDate),
-      durationHours,
-      status: BOOKING_STATUS.PENDING,
+      // ... base fields ...
       totalPrice: totalPrice.toNumber(),
       subtotal: subtotal.toNumber(),
       platformCommission: platformCommission.toNumber(),
@@ -204,39 +676,26 @@ export const createBooking = functions.region('europe-west1').https.onCall(
       paymentStatus: PAYMENT_STATUS.PENDING,
       paymentMethod: null,
       stripePaymentIntentId: null,
-      notes: notes || null,
-      cancellationReason: null,
-      cancellationInitiatedBy: null,
-      cancelledAt: null,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      confirmedAt: null,
-      completedAt: null,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      hasReview: false,
-      reviewDeadline: null,
-      reminderSentAt: null,
     };
 
     await bookingRef.set(bookingData);
 
-    // Return booking info (Stripe PaymentIntent to be created by payments function)
     return {
       success: true,
       bookingId,
       totalPrice: totalPrice.toNumber(),
       subtotal: subtotal.toNumber(),
       platformCommission: platformCommission.toNumber(),
-      startTime: startDate.toISOString(),
-      endTime: endDate.toISOString(),
-      durationHours,
+      // Client will use this to create PaymentIntent
+      requiresPayment: true,
     };
   }
 );
 
 /**
- * Confirm a booking after payment
- */
-export const confirmBooking = functions.region('europe-west1').https.onCall(
+ * Confirm a booking after successful payment (V1)
+ *
+export const confirmBookingAfterPayment = functions.region('europe-west1').https.onCall(
   async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError('unauthenticated', 'Authentification requise');
@@ -296,51 +755,20 @@ export const confirmBooking = functions.region('europe-west1').https.onCall(
 );
 
 /**
- * Cancel a booking
- */
-export const cancelBooking = functions.region('europe-west1').https.onCall(
+ * Cancel a booking with refund calculation (V1)
+ *
+export const cancelBookingWithRefund = functions.region('europe-west1').https.onCall(
   async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError('unauthenticated', 'Authentification requise');
     }
 
-    const { error, value } = cancelBookingSchema.validate(data);
-    if (error) {
-      throw new functions.https.HttpsError('invalid-argument', error.details[0].message);
-    }
-
-    const { bookingId, reason } = value;
-    const userId = context.auth.uid;
-
-    const bookingRef = db.collection(COLLECTIONS.BOOKINGS).doc(bookingId);
-    const bookingDoc = await bookingRef.get();
-
-    if (!bookingDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Réservation non trouvée');
-    }
-
-    const booking = bookingDoc.data()!;
-
-    // Verify user can cancel (coach or facility owner)
-    const isCoach = userId === booking.coachId;
-    const isFacilityOwner = userId === booking.facilityOwnerId;
-
-    if (!isCoach && !isFacilityOwner) {
-      throw new functions.https.HttpsError('permission-denied', 'Action non autorisée');
-    }
-
-    // Verify booking can be cancelled
-    if (![BOOKING_STATUS.PENDING, BOOKING_STATUS.CONFIRMED].includes(booking.status)) {
-      throw new functions.https.HttpsError(
-        'failed-precondition',
-        'Cette réservation ne peut pas être annulée'
-      );
-    }
+    // ... validation code ...
 
     // Calculate refund based on cancellation policy
     const startTime = booking.startTime.toDate();
     const hoursUntilStart = (startTime.getTime() - Date.now()) / (1000 * 60 * 60);
-    
+
     let refundRate = 0;
     if (hoursUntilStart > CANCELLATION_FULL_REFUND_HOURS) {
       refundRate = 1; // 100% refund
@@ -362,9 +790,8 @@ export const cancelBooking = functions.region('europe-west1').https.onCall(
       refundRate,
     });
 
-    // If payment was made, initiate refund (handled by payment functions)
+    // If payment was made, initiate refund
     if (booking.paymentStatus === PAYMENT_STATUS.SUCCEEDED && refundAmount > 0) {
-      // Trigger refund process (implemented in payments.ts)
       await db.collection('refundRequests').add({
         bookingId,
         amount: refundAmount,
@@ -385,57 +812,4 @@ export const cancelBooking = functions.region('europe-west1').https.onCall(
   }
 );
 
-/**
- * Get user's bookings
- */
-export const getUserBookings = functions.region('europe-west1').https.onCall(
-  async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Authentification requise');
-    }
-
-    const { status, limit = 20, startAfter } = data;
-    const userId = context.auth.uid;
-
-    // Get user type
-    const userDoc = await db.collection(COLLECTIONS.USERS).doc(userId).get();
-    if (!userDoc.exists) {
-      throw new functions.https.HttpsError('not-found', 'Utilisateur non trouvé');
-    }
-
-    const userType = userDoc.data()!.type;
-    const filterField = userType === 'coach' ? 'coachId' : 'facilityOwnerId';
-
-    let query = db.collection(COLLECTIONS.BOOKINGS)
-      .where(filterField, '==', userId)
-      .orderBy('startTime', 'desc')
-      .limit(limit);
-
-    if (status) {
-      query = query.where('status', '==', status);
-    }
-
-    if (startAfter) {
-      const startAfterDoc = await db.collection(COLLECTIONS.BOOKINGS).doc(startAfter).get();
-      if (startAfterDoc.exists) {
-        query = query.startAfter(startAfterDoc);
-      }
-    }
-
-    const snapshot = await query.get();
-
-    const bookings = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      startTime: doc.data().startTime?.toDate().toISOString(),
-      endTime: doc.data().endTime?.toDate().toISOString(),
-      createdAt: doc.data().createdAt?.toDate().toISOString(),
-    }));
-
-    return {
-      success: true,
-      bookings,
-      hasMore: snapshot.docs.length === limit,
-    };
-  }
-);
+*/

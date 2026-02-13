@@ -1,24 +1,36 @@
+
+
+
+
 /**
  * UnCoachUneSalle - Cloud Functions
- * 
- * Main entry point for all Firebase Cloud Functions
- * 
- * @version 1.0.0
+ *
+ * Beta Version (sans paiements)
  */
 
 import * as admin from 'firebase-admin';
 
-// Initialize Firebase Admin
 admin.initializeApp();
 
-// Export all functions
+// Auth functions
 export * from './functions/auth';
+
+// Bookings (sans paiement)
 export * from './functions/bookings';
-export * from './functions/payments';
+
+// Notifications
 export * from './functions/notifications';
+
+// Reviews
 export * from './functions/reviews';
-export * from './functions/analytics';
+
+// Triggers
 export * from './triggers/bookingTriggers';
 export * from './triggers/reviewTriggers';
 export * from './triggers/messageTriggers';
-export * from './webhooks/stripeWebhook';
+
+// BETA: Désactivé pour la v1
+// export * from './functions/payments';
+// export * from './functions/analytics';
+// export * from './webhooks/stripeWebhook';
+
