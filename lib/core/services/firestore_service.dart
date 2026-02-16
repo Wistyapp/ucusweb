@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 import '../models/coach_profile_model.dart';
 import '../models/facility_model.dart';
@@ -86,15 +87,29 @@ class FirestoreService {
 
   // Get facilities by owner
   Future<List<FacilityModel>> getFacilitiesByOwner(String ownerId) async {
-    final snapshot = await _firestore
-        .collection(FirestoreCollections.facilities)
-        .where('ownerId', isEqualTo: ownerId)
-        .orderBy('createdAt', descending: true)
-        .get();
+    if(kDebugMode)print('🔍 [FirestoreService] getFacilitiesByOwner called with ownerId: $ownerId');
+    try {
+      final snapshot = await _firestore
+          .collection(FirestoreCollections.facilities)
+          .where('ownerId', isEqualTo: ownerId)
+          .orderBy('createdAt', descending: true)
+          .get();
 
-    return snapshot.docs
-        .map((doc) => FacilityModel.fromFirestore(doc))
-        .toList();
+      if(kDebugMode)print('📦 [FirestoreService] Query returned ${snapshot.docs.length} documents');
+
+      // Debug: Afficher les données brutes
+      for (var doc in snapshot.docs) {
+        if(kDebugMode)print('   📄 Doc ID: ${doc.id}');
+        if(kDebugMode)print('   📄 Data: ${doc.data()}');
+      }
+
+      return snapshot.docs
+          .map((doc) => FacilityModel.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      if(kDebugMode)print('❌ [FirestoreService] Error in getFacilitiesByOwner: $e');
+      rethrow;
+    }
   }
 
   // Get facilities stream by owner

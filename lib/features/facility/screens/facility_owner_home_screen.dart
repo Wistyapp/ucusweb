@@ -1,8 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+
 import 'package:provider/provider.dart';
 import '../../../core/providers/app_auth_provider.dart';
 import '../../../core/providers/app_facility_provider.dart';
 import '../../../core/providers/app_booking_provider.dart';
+import '../../../core/routes/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 
@@ -19,7 +23,10 @@ class _FacilityOwnerHomeScreenState extends State<FacilityOwnerHomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    // IMPORTANT: Attendre que le premier frame soit rendu
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   Future<void> _loadData() async {
@@ -27,9 +34,14 @@ class _FacilityOwnerHomeScreenState extends State<FacilityOwnerHomeScreen> {
     final facilityProvider = context.read<AppFacilityProvider>();
     final bookingProvider = context.read<AppBookingProvider>();
 
+    if(kDebugMode)print('🔐 [FacilityOwnerHomeScreen] Current user: ${authProvider.user}');
+    if(kDebugMode)print('🔐 [FacilityOwnerHomeScreen] User UID: ${authProvider.user?.uid}');
+
     if (authProvider.user != null) {
       await facilityProvider.loadOwnerFacilities(authProvider.user!.uid);
       await bookingProvider.loadFacilityOwnerBookings(authProvider.user!.uid);
+    }else {
+      if(kDebugMode)print('⚠️ [FacilityOwnerHomeScreen] No user logged in!');
     }
   }
 
@@ -152,7 +164,7 @@ class _DashboardTab extends StatelessWidget {
           children: [
             IconButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/notifications');
+                Navigator.pushNamed(context, AppRouter.notifications);
               },
               icon: Badge(
                 label: const Text('3'),
@@ -209,21 +221,21 @@ class _DashboardTab extends StatelessWidget {
           value: pendingBookings.toString(),
           icon: Icons.pending_actions,
           color: Colors.orange,
-          onTap: () => Navigator.pushNamed(context, '/facility-bookings', arguments: {'filter': 'pending'}),
+          onTap: () => Navigator.pushNamed(context, AppRouter.facilityBookings, arguments: {'filter': 'pending'}),
         ),
         _StatCard(
           title: 'Confirmées',
           value: confirmedBookings.toString(),
           icon: Icons.check_circle_outline,
           color: Colors.green,
-          onTap: () => Navigator.pushNamed(context, '/facility-bookings', arguments: {'filter': 'confirmed'}),
+          onTap: () => Navigator.pushNamed(context, AppRouter.facilityBookings, arguments: {'filter': 'confirmed'}),
         ),
         _StatCard(
           title: 'Mes Salles',
           value: totalFacilities.toString(),
           icon: Icons.business,
           color: AppTheme.lightTheme.primaryColor,
-          onTap: () => Navigator.pushNamed(context, '/my-facilities'),
+          onTap: () => Navigator.pushNamed(context, AppRouter.myFacilities),
         ),
         _StatCard(
           title: 'Ce mois',
@@ -260,7 +272,7 @@ class _DashboardTab extends StatelessWidget {
               ),
             ),
             TextButton(
-              onPressed: () => Navigator.pushNamed(context, '/facility-bookings'),
+              onPressed: () => Navigator.pushNamed(context, AppRouter.facilityBookings),
               child: const Text('Voir tout'),
             ),
           ],
@@ -310,7 +322,7 @@ class _DashboardTab extends StatelessWidget {
                   trailing: _buildStatusChip(booking.status),
                   onTap: () => Navigator.pushNamed(
                     context,
-                    '/booking-detail',
+                    AppRouter.bookingDetail,
                     arguments: booking.id,
                   ),
                 ),
@@ -616,7 +628,7 @@ class MyFacilitiesScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            onPressed: () => Navigator.pushNamed(context, '/create-facility'),
+            onPressed: () => Navigator.pushNamed(context, AppRouter.createFacility),
             icon: const Icon(Icons.add),
           ),
         ],
@@ -652,7 +664,7 @@ class MyFacilitiesScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, '/create-facility'),
+                    onPressed: () => Navigator.pushNamed(context, AppRouter.createFacility),
                     icon: const Icon(Icons.add),
                     label: const Text('Ajouter une salle'),
                   ),
@@ -672,7 +684,7 @@ class MyFacilitiesScreen extends StatelessWidget {
                 child: InkWell(
                   onTap: () => Navigator.pushNamed(
                     context,
-                    '/facility-detail',
+                    AppRouter.facilityDetail,
                     arguments: facility.id,
                   ),
                   child: Column(

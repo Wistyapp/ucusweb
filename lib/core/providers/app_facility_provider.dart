@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/address_model.dart';
 import '../models/facility_model.dart';
 import '../services/firestore_service.dart';
@@ -24,6 +25,13 @@ class AppFacilityProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isSearching => _isSearching;
   String? get error => _error;
+
+  /// Helper pour notifier de manière sûre (évite les erreurs pendant le build)
+  void _safeNotifyListeners() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+  }
 
   Future<void> searchFacilities({
     String? city,
@@ -54,17 +62,18 @@ class AppFacilityProvider extends ChangeNotifier {
   Future<void> loadFacility(String facilityId) async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    //notifyListeners();
 
     try {
       _selectedFacility = await _firestoreService.getFacility(facilityId);
       if (_selectedFacility != null) {
         _selectedFacilitySpaces = await _firestoreService.getSpaces(facilityId);
       }
-      _isLoading = false;
-      notifyListeners();
+      //_isLoading = false;
+      //notifyListeners();
     } catch (e) {
       _error = e.toString();
+    } finally {
       _isLoading = false;
       notifyListeners();
     }
@@ -73,14 +82,23 @@ class AppFacilityProvider extends ChangeNotifier {
   Future<void> loadMyFacilities(String ownerId) async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    //notifyListeners();
+    if (kDebugMode) print('🔄 [AppFacilityProvider] loadMyFacilities called with ownerId: $ownerId');
 
     try {
       _myFacilities = await _firestoreService.getFacilitiesByOwner(ownerId);
       _isLoading = false;
-      notifyListeners();
+      if(kDebugMode)print('✅ [AppFacilityProvider] Loaded ${_myFacilities.length} facilities');
+
+      // Debug: Afficher les détails de chaque facility
+      for (var facility in _myFacilities) {
+        if(kDebugMode)print('   📍 Facility: ${facility.name} (ID: ${facility.id})');
+      }
+
     } catch (e) {
       _error = e.toString();
+      if(kDebugMode)print('❌ [AppFacilityProvider] Error: $_error');
+    }finally {
       _isLoading = false;
       notifyListeners();
     }
@@ -103,7 +121,7 @@ class AppFacilityProvider extends ChangeNotifier {
   }) async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    //notifyListeners();
 
     try {
       List<String> imageUrls = [];
@@ -150,13 +168,14 @@ class AppFacilityProvider extends ChangeNotifier {
       await loadMyFacilities(ownerId);
 
       _isLoading = false;
-      notifyListeners();
+      //notifyListeners();
       return facilityId;
     } catch (e) {
       _error = e.toString();
+      return null;
+    } finally {
       _isLoading = false;
       notifyListeners();
-      return null;
     }
   }
 

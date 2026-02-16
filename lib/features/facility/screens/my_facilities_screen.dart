@@ -27,7 +27,7 @@ class _MyFacilitiesScreenState extends State<MyFacilitiesScreen> {
   Future<void> _loadFacilities() async {
     final authProvider = Provider.of<AppAuthProvider>(context, listen: false);
     final facilityProvider = Provider.of<AppFacilityProvider>(context, listen: false);
-    
+
     if (authProvider.user != null) {
       await facilityProvider.loadOwnerFacilities(authProvider.user!.uid);
     }
@@ -312,119 +312,123 @@ class _FacilityOptionsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Facility name
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              facility.name,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+      // Limiter la hauteur max à 80% de l'écran
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.8,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 20),
-          const Divider(height: 1),
-          // Options
-          ListTile(
-            leading:  Icon(Icons.edit, color: AppTheme.lightTheme.primaryColor),
-            title: const Text('Modifier la salle'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(
-                context,
-                AppRouter.editFacility,
-                arguments: facility.id,
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.calendar_month, color: Colors.blue),
-            title: const Text('Gérer les disponibilités'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(
-                context,
-                AppRouter.availability,
-                arguments: facility.id,
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.book_online, color: Colors.green),
-            title: const Text('Voir les réservations'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(
-                context,
-                AppRouter.facilityBookings,
-                arguments: facility.id,
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.star, color: Colors.amber),
-            title: const Text('Voir les avis'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(
-                context,
-                AppRouter.reviews,
-                arguments: {
-                  'userId': facility.id,
-                  'userType': 'facility',
-                },
-              );
-            },
-          ),
-          ListTile(
-            leading: Icon(
-              facility.isActive ? Icons.pause : Icons.play_arrow,
-              color: facility.isActive ? Colors.orange : Colors.green,
+            const SizedBox(height: 20),
+            // Facility name
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                facility.name,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
-            title: Text(facility.isActive ? 'Désactiver la salle' : 'Activer la salle'),
-            onTap: () async {
-              Navigator.pop(context);
-              final facilityProvider = Provider.of<AppFacilityProvider>(
-                context,
-                listen: false,
-              );
-              await facilityProvider.toggleFacilityStatus(facility.id, !facility.isActive);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      facility.isActive
-                          ? 'Salle désactivée'
-                          : 'Salle activée',
-                    ),
-                  ),
+            const SizedBox(height: 20),
+            const Divider(height: 1),
+            // Options
+            ListTile(
+              leading: Icon(Icons.edit, color: AppTheme.lightTheme.primaryColor),
+              title: const Text('Modifier la salle'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(
+                  context,
+                  AppRouter.editFacility,
+                  arguments: facility.id,
                 );
-              }
-            },
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.delete_outline, color: Colors.red),
-            title: const Text('Supprimer la salle', style: TextStyle(color: Colors.red)),
-            onTap: () => _confirmDelete(context),
-          ),
-          const SizedBox(height: 20),
-        ],
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.calendar_month, color: Colors.blue),
+              title: const Text('Gérer les disponibilités'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(
+                  context,
+                  AppRouter.availability,
+                  arguments: facility.id,
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.book_online, color: Colors.green),
+              title: const Text('Voir les réservations'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(
+                  context,
+                  AppRouter.facilityBookings,
+                  arguments: facility.id,
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.star, color: Colors.amber),
+              title: const Text('Voir les avis'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(
+                  context,
+                  AppRouter.reviews,
+                  arguments: {
+                    'userId': facility.id,
+                    'userType': 'facility',
+                  },
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                facility.isActive ? Icons.pause : Icons.play_arrow,
+                color: facility.isActive ? Colors.orange : Colors.green,
+              ),
+              title: Text(facility.isActive ? 'Désactiver la salle' : 'Activer la salle'),
+              onTap: () async {
+                Navigator.pop(context);
+                final facilityProvider = Provider.of<AppFacilityProvider>(
+                  context,
+                  listen: false,
+                );
+                await facilityProvider.toggleFacilityStatus(facility.id, !facility.isActive);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        facility.isActive ? 'Salle désactivée' : 'Salle activée',
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Colors.red),
+              title: const Text('Supprimer la salle', style: TextStyle(color: Colors.red)),
+              onTap: () => _confirmDelete(context),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
@@ -436,7 +440,7 @@ class _FacilityOptionsSheet extends StatelessWidget {
         title: const Text('Supprimer la salle ?'),
         content: Text(
           'Voulez-vous vraiment supprimer "${facility.name}" ?\n\n'
-          'Cette action est irréversible et supprimera toutes les données associées.',
+              'Cette action est irréversible et supprimera toutes les données associées.',
         ),
         actions: [
           TextButton(
@@ -447,13 +451,13 @@ class _FacilityOptionsSheet extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Close bottom sheet
-              
+
               final facilityProvider = Provider.of<AppFacilityProvider>(
                 context,
                 listen: false,
               );
               await facilityProvider.deleteFacility(facility.id);
-              
+
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Salle supprimée')),
@@ -471,3 +475,4 @@ class _FacilityOptionsSheet extends StatelessWidget {
     );
   }
 }
+

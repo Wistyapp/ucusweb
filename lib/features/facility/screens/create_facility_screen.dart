@@ -124,10 +124,13 @@ class _CreateFacilityScreenState extends State<CreateFacilityScreen> {
     }
 
     if (_selectedImages.isEmpty) {
+      /*
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Veuillez ajouter au moins une photo')),
       );
       return;
+
+       */
     }
 
     setState(() {
